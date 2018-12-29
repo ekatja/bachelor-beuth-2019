@@ -4,18 +4,8 @@ import xlsxwriter
 
 # Here, we're just importing both Beautiful Soup and the Requests library
 page_link = 'https://www.studis-online.de/Hochschulen/'
-# this is the url that we've already determined is safe and legal to scrape from.
-page_response = requests.get(page_link, timeout=5)
-# here, we fetch the content from the url, using the requests library
-page_content = BeautifulSoup(page_response.content, "html.parser")
-#we use the html parser to parse the url content and store it in a variable.
-# print(page_content)
+page = 'Seite-'
 
-items = page_content.find_all("div", class_="ston-hslistdiv")
-# items = page_content.find_all(lambda tag: tag.name == 'div' and tag.get['class'] == ['ston-hslistdiv'])
-
-# print(items[1])
-unis = []
 
 def lambda_filter(tag):
     if (tag.name == 'div'):
@@ -37,17 +27,36 @@ def parse_div_info(item):
     # print(uni_spec)
     return {'title': uni_title, 'limits': uni_limits, 'specialisations': uni_spec}
 
-for item in items:
+all_items = []
+# this is the url that we've already determined is safe and legal to scrape from.
+for nr in range(1,18):
+    if(nr == 1):
+        page_response = requests.get(page_link, timeout=5)
+    else:
+        page_response = requests.get(page_link+page+str(nr), timeout=5)
+
+    # here, we fetch the content from the url, using the requests library
+    page_content = BeautifulSoup(page_response.content, "html.parser")
+
+    #we use the html parser to parse the url content and store it in a variable.
+    items = page_content.find_all("div", class_="ston-hslistdiv")
+
+    all_items += items
+    # all_items.append(items)
+
+print(all_items)
+unis = []
+
+for item in all_items:
 
     uni = parse_div_info(item)
     unis.append(uni)
 
-print(unis)
+# print(unis)
 
 workbook = xlsxwriter.Workbook('unis.xlsx')
 worksheet = workbook.add_worksheet()
 
-# d = {'a':['e1','e2','e3'], 'b':['e1','e2'], 'c':['e1']}
 row = 0
 col = 0
 for key in unis[0].keys():
