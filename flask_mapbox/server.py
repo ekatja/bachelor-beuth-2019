@@ -40,8 +40,9 @@ ROUTE = [
 @app.route('/map')
 def mapbox_js():
     # route_data = get_route_data()
+    print(request)
 
-    return render_template('map.html',
+    return render_template('index.html',
                            # ACCESS_KEY=MAPBOX_ACCESS_KEY,
                            # route_data=route_data
     )
@@ -89,8 +90,10 @@ ws_2000_01 = df[df.Semester == 'WS 2000/01']
 m = folium.Map(location=[52, 13], tiles="Openstreetmap",
                zoom_start=6)
 
+
+
 st_data = ws_1999_00
-print(st_data['Insgesamt, Insgesamt'].min(), st_data['Insgesamt, Insgesamt'].max())
+# print(st_data['Insgesamt, Insgesamt'].min(), st_data['Insgesamt, Insgesamt'].max())
 
 m.choropleth(
     geo_data=state_geo,
@@ -98,7 +101,7 @@ m.choropleth(
     data=st_data,
     columns=['Bundesland', 'Insgesamt, Insgesamt'],
     key_on='feature.properties.NAME_1',
-    fill_color='BuGn',
+    fill_color='OrRd',
     fill_opacity=0.7,
     line_opacity=0.2,
     legend_name='Studentenanzahl',
@@ -110,4 +113,4 @@ m.choropleth(
 #     m.add_child(folium.Marker(location=coords[point], popup=folium.Popup('Hi')))
 
 folium.LayerControl().add_to(m)
-m.save(outfile='map.html')
+m.save(outfile='templates/map.html')
