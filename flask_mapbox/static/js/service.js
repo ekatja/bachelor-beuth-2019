@@ -1,9 +1,16 @@
-var slider = document.getElementById("year-selector");
+var year_select = document.getElementById("year-selector");
 var output = document.getElementById("demo");
-output.innerHTML = slider.value; // Display the default slider value
-console.log(slider.value);
+output.innerHTML = year_select.value; // Display the default slider value
+console.log(year_select.value);
+console.log(window.location);
+var loc;
+var path = window.location.pathname;
 
 // Update the current slider value (each time you drag the slider handle)
-slider.oninput = function() {
+year_select.oninput = function() {
   output.innerHTML = this.value;
+
+  loc = window.location;
+  loc.href = this.value;
 }
+
