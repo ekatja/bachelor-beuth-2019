@@ -15,6 +15,30 @@ app.config.from_object(__name__)
 app.config.from_envvar('APP_CONFIG_FILE', silent=True)
 # MAPBOX_ACCESS_KEY = app.config['MAPBOX_ACCESS_KEY']
 
+YEARS = {
+    "WS_1998_99": '1998/99',
+    "WS_1999_00": '1999/00',
+    "WS_2000_01": '2000/01',
+    "WS_2001_02": '2001/02',
+    "WS_2002_03": '2001/03',
+    "WS_2003_04": '2003/04',
+    "WS_2004_05": '2004/05',
+    "WS_2005_06": '2005/06',
+    "WS_2006_07": '2006/07',
+    "WS_2007_08": '2007/08',
+    "WS_2008_09": '2008/09',
+    "WS_2009_10": '2009/10',
+    "WS_2010_11": '2010/11',
+    "WS_2011_12": '2011/12',
+    "WS_2012_13": '2012/13',
+    "WS_2013_14": '2013/14',
+    "WS_2014_15": '2014/15',
+    "WS_2015_16": '2015/16',
+    "WS_2016_17": '2016/17'
+}
+for key in YEARS:
+    print(key)
+
 # geo-coordinate points along the route
 ROUTE = [
     {"lat": 52.523, "long": 13.413, 'name': 'Berlin', 'admin1code': ''},
@@ -70,14 +94,8 @@ with open('../../geo_germany.geojson') as data_file:
 
 df = pd.read_excel('../../clean_data/students_bundesland_gender_foreigner_ws1998_99_ws2016_17.xlsx')
 
-ws_1998_99 = df[df.Semester == 'WS_1998_99']
-ws_1999_00 = df[df.Semester == 'WS_1999_00']
-ws_2000_01 = df[df.Semester == 'WS_2000_01']
+m = folium.Map(location=[52, 13], tiles="Openstreetmap", zoom_start=6)
 
-m = folium.Map(location=[52, 13], tiles="Openstreetmap",
-               zoom_start=6)
-
-st_data = ws_1999_00
 # print(st_data)
 # print(st_data['Insgesamt, Insgesamt'].min(), st_data['Insgesamt, Insgesamt'].max())
 
@@ -118,4 +136,4 @@ def mapbox_js(year='WS_1998_99'):
                       bins=[df_year['Insgesamt, Insgesamt'].min(), 100000, 200000, 300000, 400000,
                             df_year['Insgesamt, Insgesamt'].max() + 1])
 
-    return render_template('index.html', year=year)
+    return render_template('index.html', selected_year=year, years = YEARS)
