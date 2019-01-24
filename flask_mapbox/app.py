@@ -3,10 +3,13 @@ import folium
 import pandas as pd
 import xlrd
 import requests
+import branca
 from geojson import Point, Feature
 # import geojson
-from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
-
+from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash, jsonify
+from folium.plugins import TimeSliderChoropleth
+from jinja2 import Template
+from branca.colormap import linear
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -20,7 +23,7 @@ YEARS = {
     "WS_1999_00": '1999/00',
     "WS_2000_01": '2000/01',
     "WS_2001_02": '2001/02',
-    "WS_2002_03": '2001/03',
+    "WS_2002_03": '2002/03',
     "WS_2003_04": '2003/04',
     "WS_2004_05": '2004/05',
     "WS_2005_06": '2005/06',
@@ -36,8 +39,6 @@ YEARS = {
     "WS_2015_16": '2015/16',
     "WS_2016_17": '2016/17'
 }
-for key in YEARS:
-    print(key)
 
 # geo-coordinate points along the route
 ROUTE = [
@@ -58,6 +59,7 @@ ROUTE = [
     {"lat": 54.333, "long": 10.133, 'name': 'Kiel'},
     {"lat": 53.628, "long": 11.412, 'name': 'Schwerin'},
 ]
+
 
 # This is the template for the API call:
 # https://api.mapbox.com/directions/v5/mapbox/driving/{GEO_COORDINATES_LIST}.json?access_token={MAPBOX_ACCESS_TOKEN}&overview=full&geometries=geojson
@@ -89,18 +91,35 @@ ROUTE = [
 #
 #     return route_data
 
-with open('../../geo_germany.geojson') as data_file:
+
+@app.after_request
+def add_header(r):
+    """
+    Add headers to both force latest IE rendering engine or Chrome Frame,
+    and also to cache the rendered page for 10 minutes.
+    """
+    r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    r.headers["Pragma"] = "no-cache"
+    r.headers["Expires"] = "0"
+    r.headers['Cache-Control'] = 'public, max-age=0'
+    return r
+
+
+with open('../../geodata/geo_germany.geojson') as data_file:
     state_geo = json.load(data_file)
 
 df = pd.read_excel('../../clean_data/students_bundesland_gender_foreigner_ws1998_99_ws2016_17.xlsx')
+df_un_bl_year = pd.read_excel('../../clean_data/university_bundesland_year.xlsx')
 
-m = folium.Map(location=[52, 13], tiles="Openstreetmap", zoom_start=6)
+MIN_STUDENTS_AMOUNT = df['Insgesamt, Insgesamt'].min()
+MAX_STUDENTS_AMOUNT = df['Insgesamt, Insgesamt'].max()
 
 # print(st_data)
-# print(st_data['Insgesamt, Insgesamt'].min(), st_data['Insgesamt, Insgesamt'].max())
+print(df['Insgesamt, Insgesamt'].min(), df['Insgesamt, Insgesamt'].max())
 
 
-def create_choropleth(geo_data, data, columns, legend, bins):
+def create_choropleth(geo_data, data, columns, legend, bins, gethtml):
+    m = folium.Map(location=[52, 13], tiles="Openstreetmap", zoom_start=6)
 
     m.choropleth(
         geo_data=geo_data,
@@ -120,20 +139,232 @@ def create_choropleth(geo_data, data, columns, legend, bins):
     #     m.add_child(folium.Marker(location=coords[point], popup=folium.Popup('Hi')))
 
     folium.LayerControl().add_to(m)
-    m.save(outfile='templates/map.html')
+    if gethtml:
+        print("no html update")
+        return m.get_root().render()
+    else:
+        print("new map.html")
+        m.save(outfile='templates/map.html')
+
 
 # route to the new template and send value from url
 @app.route('/map/')
 @app.route('/map/<year>')
-def mapbox_js(year='WS_1998_99'):
-    # route_data = get_route_data()
+def map(year='WS_1998_99'):
     df_year = df[df.Semester == year]
-    print('year:', year)
-    print(df_year['Insgesamt, Insgesamt'].min(), df_year['Insgesamt, Insgesamt'].max())
 
     create_choropleth(geo_data=state_geo, data=df_year, columns=['Bundesland', 'Insgesamt, Insgesamt'],
                       legend='Studentenanzahl',
-                      bins=[df_year['Insgesamt, Insgesamt'].min(), 100000, 200000, 300000, 400000,
-                            df_year['Insgesamt, Insgesamt'].max() + 1])
+                      bins=[MIN_STUDENTS_AMOUNT, 100000, 200000, 300000, 400000, 500000, 600000,
+                            MAX_STUDENTS_AMOUNT + 1],
+                      gethtml=False)
 
-    return render_template('index.html', selected_year=year, years = YEARS)
+    return render_template('index.html', selected_year=year, years=YEARS)
+
+
+@app.route('/mapupdate/', methods=['POST'])
+# @app.route('/mapupdate/<year>', methods=['GET'])
+def mapupdate(year="WS_2016_17", nationality='Insgesamt', gender='Insgesamt'):
+    print(request.form)
+    if request.form['year']:
+        print("year from form", request.form['year'])
+        year = request.form['year']
+
+    if request.form['nationality']:
+        print('nationality from form', request.form['nationality'])
+        nationality = request.form['nationality']
+
+    if request.form['gender']:
+        print('gender from form', request.form['gender'])
+        gender = request.form['gender']
+
+    df_year = df[df.Semester == year]
+    column = nationality + ', ' + gender
+
+    print(column)
+    print(df_year[column].min(), df_year[column].max())
+
+    map = create_choropleth(geo_data=state_geo, data=df_year, columns=['Bundesland', str(column)],
+                            legend='Studentenanzahl',
+                            bins=[df_year[column].min(), 100000, 200000, 300000, 400000, 500000, 600000,
+                                  MAX_STUDENTS_AMOUNT + 1],
+                            gethtml=True)
+    return map
+
+
+@app.route('/newmap/')
+def newmap():
+    with open('../../geodata/plz-3stellig.geojson') as data_file:
+        postal_geo = json.load(data_file)
+
+    m = folium.Map(location=[52, 13], tiles="Openstreetmap", zoom_start=4)
+
+    style = {'fillOpacity': 0.5, 'weight': 0.3, 'fillColor': '#yellow'}
+
+    folium.GeoJson(
+        postal_geo,
+        name='geojson',
+        style_function=lambda x: style
+    ).add_to(m)
+
+    folium.LayerControl().add_to(m)
+    m.save(outfile='templates/newmap.html')
+
+    return render_template('newmap.html')
+
+
+# TimeSliderChoroplet
+@app.route('/timemap/')
+def timemap():
+    style_dict = create_style_dict(df_un_bl_year)
+    create_timemap(state_geo, style_dict, True)
+
+    return render_template('timemap.html')
+
+
+# Data preparation for TimeSliderChoroplet map
+def create_style_dict(data):
+    # create color schema for universities
+    min_color = data.Anzahl.min()
+    max_color = data.Anzahl.max()
+    cmap = linear.PuRd_09.scale(min_color, max_color)
+
+    # Create dictionary for styles
+    styledata = {}
+    styles = pd.DataFrame()
+
+    for country in state_geo.get('features'):
+        temp = data.loc[data.Bundesland == country.get('properties').get('NAME_1')]
+
+        for i, row in temp.iterrows():
+            new_df = pd.DataFrame(data={'color': [row['Anzahl']], 'opacity': [0.5], 'year': [row['Gründungsjahr']]})
+            styles = styles.append(new_df, ignore_index=True)
+
+        styledata[country.get('id')] = styles
+
+    # Set color for quantity
+    for country, data in styledata.items():
+        data['color'] = data['color'].apply(cmap)
+    # Set year as index
+    for key in styledata:
+        datetime_index = styledata.get(key).year
+        styledata.get(key).set_index(datetime_index, inplace=True)
+
+    # Create dictionary with styles for each bundesland
+    styledict = {
+        str(country): data.to_dict(orient='index') for
+        country, data in styledata.items()
+    }
+    return styledict
+
+# Create TimeSliderChoroplet map
+def create_timemap(geo_data, style_dict, gethtml=True):
+    m = folium.Map(location=[52, 13], tiles="Openstreetmap", zoom_start=6)
+    g = TimeSliderChoropleth(
+        data=geo_data,
+        styledict=style_dict,
+    )
+
+    year_temp = Template(u"""
+                {% macro script(this, kwargs) %}
+                    var timestamps = {{ this.timestamps }};
+                    var styledict = {{ this.styledict }};
+                    var current_timestamp = timestamps[0];
+                    // insert time slider
+                    d3.select("body").insert("p", ":first-child").append("input")
+                        .attr("type", "range")
+                        .attr("width", "100px")
+                        .attr("min", 0)
+                        .attr("max", timestamps.length - 1)
+                        .attr("value", 0)
+                        .attr("id", "slider")
+                        .attr("step", "1")
+                        .style('align', 'center');
+                    // insert time slider output BEFORE time slider (text on top of slider)
+                    d3.select("body").insert("p", ":first-child").append("output")
+                        .attr("width", "100")
+                        .attr("id", "slider-value")
+                        .style('font-size', '18px')
+                        .style('text-align', 'center')
+                        .style('font-weight', '500%');
+                    var datestring = current_timestamp.toString();
+                    d3.select("output#slider-value").text(datestring);
+                    fill_map = function(){
+                        for (var feature_id in styledict){
+                            let style = styledict[feature_id]//[current_timestamp];
+                            var fillColor = 'white';
+                            var opacity = 0;
+                            if (current_timestamp in style){
+                                fillColor = style[current_timestamp]['color'];
+                                opacity = style[current_timestamp]['opacity'];
+                                d3.selectAll('#feature-'+feature_id
+                                ).attr('fill', fillColor)
+                                .style('fill-opacity', opacity);
+                            }
+                        }
+                    }
+                    d3.select("#slider").on("input", function() {
+                        current_timestamp = timestamps[this.value];
+
+                    var datestring = current_timestamp.toString();
+                    d3.select("output#slider-value").text(datestring);
+                    fill_map();
+                    });
+                    {% if this.highlight %}
+                        {{this.get_name()}}_onEachFeature = function onEachFeature(feature, layer) {
+                            layer.on({
+                                mouseout: function(e) {
+                                if (current_timestamp in styledict[e.target.feature.id]){
+                                    var opacity = styledict[e.target.feature.id][current_timestamp]['opacity'];
+                                    d3.selectAll('#feature-'+e.target.feature.id).style('fill-opacity', opacity);
+                                }
+                            },
+                                mouseover: function(e) {
+                                if (current_timestamp in styledict[e.target.feature.id]){
+                                    d3.selectAll('#feature-'+e.target.feature.id).style('fill-opacity', 1);
+                                }
+                            },
+                                click: function(e) {
+                                    {{this._parent.get_name()}}.fitBounds(e.target.getBounds());
+                            }
+                            });
+                        };
+                    {% endif %}
+                    var {{this.get_name()}} = L.geoJson(
+                        {% if this.embed %}{{this.style_data()}}{% else %}"{{this.data}}"{% endif %}
+                        {% if this.smooth_factor is not none or this.highlight %}
+                            , {
+                            {% if this.smooth_factor is not none  %}
+                                smoothFactor:{{this.smooth_factor}}
+                            {% endif %}
+                            {% if this.highlight %}
+                                {% if this.smooth_factor is not none  %}
+                                ,
+                                {% endif %}
+                                onEachFeature: {{this.get_name()}}_onEachFeature
+                            {% endif %}
+                            }
+                        {% endif %}
+                        ).addTo({{this._parent.get_name()}}
+                    );
+                {{this.get_name()}}.setStyle(function(feature) {feature.properties.style;});
+                    {{ this.get_name() }}.eachLayer(function (layer) {
+                        layer._path.id = 'feature-' + layer.feature.id;
+                        });
+                    d3.selectAll('path')
+                    .attr('stroke', 'white')
+                    .attr('stroke-width', 0.8)
+                    .attr('stroke-dasharray', '5,5')
+                    .attr('fill-opacity', 0);
+                    fill_map();
+                {% endmacro %}
+                """)
+    g._template = year_temp
+    g.add_to(m)
+
+    if gethtml:
+        print("no html update")
+        return m.get_root().render()
+    else:
+        print("timemap.html")
+        m.save(outfile='templates/timemap.html')

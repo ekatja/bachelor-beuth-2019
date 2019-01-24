@@ -10,3 +10,4 @@ MarkupSafe
 Werkzeug
 pandas
 numpy
+branca

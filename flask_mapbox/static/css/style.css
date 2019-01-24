@@ -100,3 +100,7 @@ html, body {
 .range-labels .active.selected::before {
   display: none;
 }
+
+.form-check-label {
+  font-weight: normal;
+}
