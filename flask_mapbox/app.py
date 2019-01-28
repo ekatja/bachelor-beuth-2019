@@ -8,6 +8,7 @@ from geojson import Point, Feature
 # import geojson
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash, jsonify
 from time_slider_marker import TimeSliderMarker
+
 from jinja2 import Template
 from branca.colormap import linear
 
@@ -60,38 +61,6 @@ ROUTE = [
     {"lat": 53.628, "long": 11.412, 'name': 'Schwerin'},
 ]
 
-
-# This is the template for the API call:
-# https://api.mapbox.com/directions/v5/mapbox/driving/{GEO_COORDINATES_LIST}.json?access_token={MAPBOX_ACCESS_TOKEN}&overview=full&geometries=geojson
-
-# Mapbox driving direction API call
-# ROUTE_URL = "https://api.mapbox.com/directions/v5/mapbox/driving/{0}.json?access_token={1}&overview=full&geometries=geojson"
-#
-# # create the API URL with all of our geo-coordinates and the Mapbox access token
-# def create_route_url():
-#     # Create a string with all the geo coordinates
-#     lat_longs = ";".join(["{0},{1}".format(point["long"], point["lat"]) for point in ROUTE])
-#     # Create a url with the geo coordinates and access token
-#     url = ROUTE_URL.format(lat_longs, MAPBOX_ACCESS_KEY)
-#
-#     return url
-#
-# # use requests to run the API request and return the results as a GeoJSON object
-# def get_route_data():
-#     # Get the route url
-#     route_url = create_route_url()
-#     # Perform a GET request to the route API
-#     result = requests.get(route_url)
-#     # Convert the return value to JSON
-#     data = result.json()
-#
-#     # Create a geo json object from the routing data
-#     geometry = data["routes"][0]["geometry"]
-#     route_data = Feature(geometry = geometry, properties = {})
-#
-#     return route_data
-
-
 @app.after_request
 def add_header(r):
     """
@@ -112,59 +81,9 @@ df = pd.read_excel('../../clean_data/students_bundesland_gender_foreigner_ws1998
 df_un_bl_year = pd.read_excel('../../clean_data/university_bundesland_year.xlsx')
 unis = pd.read_excel('../../data/geocoordinate_university.xlsx')
 
-
 MIN_STUDENTS_AMOUNT_ALL_ALL = df['Insgesamt, Insgesamt'].min()
-MIN_STUDENTS_AMOUNT_ALL_M = df['Insgesamt, männlich'].min()
-MIN_STUDENTS_AMOUNT_ALL_W = df['Insgesamt, weiblich'].min()
-
-MIN_STUDENTS_AMOUNT_DE_ALL = df['Deutsche, Insgesamt'].min()
-MIN_STUDENTS_AMOUNT_DE_M = df['Deutsche, männlich'].min()
-MIN_STUDENTS_AMOUNT_DE_W = df['Deutsche, weiblich'].min()
-
-MIN_STUDENTS_AMOUNT_FO_ALL = df['Ausländer, Insgesamt'].min()
-MIN_STUDENTS_AMOUNT_FO_M = df['Ausländer, männlich'].min()
-MIN_STUDENTS_AMOUNT_FO_W = df['Ausländer, weiblich'].min()
 
 MAX_STUDENTS_AMOUNT_ALL_ALL = df['Insgesamt, Insgesamt'].max()
-MAX_STUDENTS_AMOUNT_ALL_M = df['Insgesamt, männlich'].max()
-MAX_STUDENTS_AMOUNT_ALL_W = df['Insgesamt, weiblich'].max()
-
-MAX_STUDENTS_AMOUNT_DE_ALL = df['Deutsche, Insgesamt'].max()
-MAX_STUDENTS_AMOUNT_DE_M = df['Deutsche, männlich'].max()
-MAX_STUDENTS_AMOUNT_DE_W = df['Deutsche, weiblich'].max()
-
-MAX_STUDENTS_AMOUNT_FO_ALL = df['Ausländer, Insgesamt'].max()
-MAX_STUDENTS_AMOUNT_FO_M = df['Ausländer, männlich'].max()
-MAX_STUDENTS_AMOUNT_FO_W = df['Ausländer, weiblich'].max()
-
-
-def create_choropleth(geo_data, data, columns, legend, bins, gethtml):
-    m = folium.Map(location=[52, 13], tiles="Openstreetmap", zoom_start=6)
-
-    m.choropleth(
-        geo_data=geo_data,
-        name='choropleth',
-        data=data,
-        columns=columns,
-        key_on='feature.properties.NAME_1',
-        fill_color='OrRd',
-        fill_opacity=0.7,
-        line_opacity=0.2,
-        legend_name=legend,
-        bins=bins,
-        highlight=True
-    )
-
-    # for point in range(0, len(coords)):
-    #     m.add_child(folium.Marker(location=coords[point], popup=folium.Popup('Hi')))
-
-    folium.LayerControl().add_to(m)
-    if gethtml:
-        print("no html update")
-        return m.get_root().render()
-    else:
-        print("new map.html")
-        m.save(outfile='templates/map.html')
 
 
 # route to the new template and send value from url
@@ -172,11 +91,11 @@ def create_choropleth(geo_data, data, columns, legend, bins, gethtml):
 @app.route('/map/<year>')
 def map(year='WS_1998_99'):
     df_year = df[df.Semester == year]
+    bins = create_bins(MIN_STUDENTS_AMOUNT_ALL_ALL, MAX_STUDENTS_AMOUNT_ALL_ALL, 7)
 
     create_choropleth(geo_data=state_geo, data=df_year, columns=['Bundesland', 'Insgesamt, Insgesamt'],
                       legend='Studentenanzahl',
-                      bins=[MIN_STUDENTS_AMOUNT, 100000, 200000, 300000, 400000, 500000, 600000,
-                            MAX_STUDENTS_AMOUNT + 1],
+                      bins=bins,
                       gethtml=False)
 
     return render_template('index.html', selected_year=year, years=YEARS)
@@ -184,8 +103,16 @@ def map(year='WS_1998_99'):
 
 @app.route('/mapupdate/', methods=['POST'])
 # @app.route('/mapupdate/<year>', methods=['GET'])
-def mapupdate(year="WS_2016_17", nationality='Insgesamt', gender='Insgesamt'):
-    print(request.form)
+def mapupdate(dataframe='st_bd', year="WS_2016_17", nationality='Insgesamt', gender='Insgesamt'):
+
+    #TODO: a = [v for v in request.form]
+
+    print("Got request",request.form)
+
+    if request.form['dataframe']:
+        print("dataframe from form", request.form['dataframe'])
+        dataframe = request.form['dataframe']
+
     if request.form['year']:
         print("year from form", request.form['year'])
         year = request.form['year']
@@ -198,18 +125,29 @@ def mapupdate(year="WS_2016_17", nationality='Insgesamt', gender='Insgesamt'):
         print('gender from form', request.form['gender'])
         gender = request.form['gender']
 
-    df_year = df[df.Semester == year]
-    column = nationality + ', ' + gender
+    if dataframe == 'st_bd':
+        df_year = df[df.Semester == year]
+        column = nationality + ', ' + gender
+        print(column)
+        # Create bins for 7 intervals
+        min_val = df[column].min()
+        max_val = df[column].max()
+        print(min_val, max_val)
 
-    print(column)
-    print(df_year[column].min(), df_year[column].max())
+        bins = create_bins(min_val, max_val, 7)
 
-    map = create_choropleth(geo_data=state_geo, data=df_year, columns=['Bundesland', str(column)],
-                            legend='Studentenanzahl',
-                            bins=[df_year[column].min(), 100000, 200000, 300000, 400000, 500000, 600000,
-                                  MAX_STUDENTS_AMOUNT + 1],
-                            gethtml=True)
-    return map
+        map = create_choropleth(geo_data=state_geo, data=df_year, columns=['Bundesland', str(column)],
+                                legend='Studentenanzahl',
+                                bins=bins,
+                                gethtml=True)
+        return map
+
+    else:
+        # unis_dict = create_unis_dict(unis)
+        # map = create_timemap(geo_data=state_geo, style_dict= unis_dict, gethtml=True)
+        # return map
+
+        return redirect('/university-foundation-year')
 
 
 @app.route('/newmap/')
@@ -234,13 +172,53 @@ def newmap():
 
 
 # TimeSliderChoroplet
-@app.route('/timemap/')
+@app.route('/university-foundation-year/')
 def timemap():
     style_dict = create_unis_dict(unis)
-    create_timemap(state_geo, style_dict, True)
+    create_timemap(state_geo, style_dict, False)
+    return render_template('uni_year.html')
 
-    return render_template('timemap.html')
+# Create choropleth
+def create_choropleth(geo_data, data, columns, legend, bins, gethtml):
+    m = folium.Map(location=[52, 13], tiles="Openstreetmap", zoom_start=6)
 
+    m.choropleth(
+        geo_data=geo_data,
+        name='choropleth',
+        data=data,
+        columns=columns,
+        key_on='feature.properties.NAME_1',
+        fill_color='OrRd',
+        fill_opacity=0.7,
+        line_opacity=0.2,
+        legend_name=legend,
+        bins=bins,
+        highlight=True
+    )
+
+    folium.GeoJson(data=geo_data, tooltip=folium.features.GeoJsonTooltip(fields=['NAME_1'],
+                                                   aliases=['Bundesland'],
+                                                   labels=True,
+                                                   sticky=True)).add_to(m)
+
+    folium.LayerControl().add_to(m)
+    if gethtml:
+        print("no html update")
+        return m.get_root().render()
+    else:
+        print("new map.html")
+        m.save(outfile='templates/map.html')
+
+
+# Create bins for choropleth and round to thousands
+def create_bins(start, end, number):
+    bins = []
+    step = (end - start) / number
+    bins.append(start)
+    for n in range(1, number):
+        bins.append(round(start + step * n, -3))
+    bins.append(end + 1)
+    return bins
 
 # Data preparation for TimeSliderChoroplet map
 def create_style_dict(data):
@@ -277,9 +255,9 @@ def create_style_dict(data):
     }
     return styledict
 
+
 # Create dictionary of universities for each year
 def create_unis_dict(data):
-
     unis_dict = {}
     for item in data.itertuples():
         if item.Gründungsjahr in unis_dict.keys():
@@ -290,9 +268,10 @@ def create_unis_dict(data):
                                               'name': item.Hochschulname, 'typ': item.Hochschultyp}]
     return unis_dict
 
+
 # Create TimeSliderMarker map
-def create_timemap(geo_data, style_dict, gethtml=True):
-    m = folium.Map(location=[51, 13], tiles="Openstreetmap", zoom_start=5)
+def create_timemap(geo_data, style_dict, gethtml=False):
+    m = folium.Map(location=[51, 13], tiles="Openstreetmap", zoom_start=6)
     g = TimeSliderMarker(
         data=geo_data,
         styledict=style_dict,

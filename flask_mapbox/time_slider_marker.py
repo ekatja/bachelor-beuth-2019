@@ -30,15 +30,30 @@ class TimeSliderMarker(GeoJson):
     show: bool, default True
         Whether the layer will be shown on opening (only for overlays).
     """
+
+    #TODO: Move template to file
+
+    # from jinja2 import Template
+    # with open('template.html.jinja2') as file_:
+    #     template = Template(file_.read())
+    # template.render(name='John')
+
+
+
     _template = Template(u"""
             {% macro script(this, kwargs) %}
+            document.addEventListener("DOMContentLoaded", function(event) {
+ 
                 var timestamps = {{ this.timestamps }};
                 var styledict = {{ this.styledict }};
                 var current_timestamp = timestamps[0];
+                
                 let markersDict = {};
                 let markers;
+                console.log('hi');
+                //console.log(d3.select("#year-slider"));
                 // insert time slider
-                d3.select("body").insert("p", ":first-child").append("input")
+                d3.select("#year-slider").insert("p", ":first-child").append("input")
                     .attr("type", "range")
                     .attr("width", "100px")
                     .attr("min", 0)
@@ -48,7 +63,7 @@ class TimeSliderMarker(GeoJson):
                     .attr("step", "1")
                     .style('align', 'center');
                 // insert time slider output BEFORE time slider (text on top of slider)
-                d3.select("body").insert("p", ":first-child").append("output")
+                d3.select("#year-slider").insert("p", ":first-child").append("output")
                     .attr("width", "100")
                     .attr("id", "slider-value")
                     .style('font-size', '18px')
@@ -91,7 +106,7 @@ class TimeSliderMarker(GeoJson):
                 }
                 clear_map = function(){
                     map = {{this._parent.get_name()}};
-                    console.log(current_timestamp);
+                    //console.log(current_timestamp);
                     
                     for (var year in markersDict ){
                         if(year > current_timestamp){
@@ -114,6 +129,7 @@ class TimeSliderMarker(GeoJson):
                 
                 create_marker();
                 fill_map();
+                });
             {% endmacro %}
             """)
 
@@ -137,8 +153,10 @@ class TimeSliderMarker(GeoJson):
         self.styledict = json.dumps(styledict, sort_keys=True, indent=2)
 
     def render(self, **kwargs):
+
         super(TimeSliderMarker, self).render(**kwargs)
         figure = self.get_root()
+
         assert isinstance(figure, Figure), ('You cannot render this Element '
                                             'if it is not in a Figure.')
         figure.header.add_child(JavascriptLink('https://d3js.org/d3.v4.min.js'), name='d3v4')

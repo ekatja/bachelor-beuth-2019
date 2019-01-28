@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang='DE'>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+          integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+            integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+            crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+            integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+            crossorigin="anonymous"></script>
+    <!--End Bootstrap-->
+
+    <link rel="stylesheet" href="../static/css/style.css"/>
+
+</head>
+<body>
+<div class="container-fluid h-100">
+    <div class="row justify-content-end h-100">
+        <div class="col-md-9 h-100" id="folium-map">
+            {% include 'timemap.html' %}
+        </div>
+        <div class="col-md-3 h-100 pr-5">
+            <h2 class="mb-3">Studierende in Deutschland</h2>
+            <!-- Data Selector -->
+            <form id="data-selector-form">
+                <div class="mb-3">
+                    <label for="data-selector">Wähle die Daten aus:</label>
+                    <select class="custom-select d-block w-100 mr-4" id="data-selector">
+                        <option value="st_bd">Studierende nach Bundesländer</option>
+                        <option value="university-foundation-year" selected>Hochschulen nach Gründungsjahr</option>
+                        <option>Noch eine Option</option>
+                    </select>
+                </div>
+            <!-- Selector -->
+
+            </form>
+            <div class="mb-3" id="year-slider"></div>
+            <!--<div class="mb-3">-->
+                <!--<label for="year-slider">Jahr: <span id="year-slider-val"></span></label>-->
+                <!--<input id="year-slider" type ="range" min ="1386" max="2017" step ="1" value ="1386"/>-->
+            <!--</div>-->
+
+        </div>
+    </div>
+</div>
+<script src="../static/js/service.js"></script>
+</body>
+
+</html>
