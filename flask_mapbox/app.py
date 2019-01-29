@@ -1,10 +1,12 @@
 import json
 import folium
 import pandas as pd
+import geopandas as gpd
 import xlrd
 import requests
 import branca
 from geojson import Point, Feature
+import fiona.crs
 # import geojson
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash, jsonify
 from time_slider_marker import TimeSliderMarker
@@ -77,26 +79,47 @@ def add_header(r):
 with open('../../geodata/geo_germany.geojson') as data_file:
     state_geo = json.load(data_file)
 
+#Import data files
 df = pd.read_excel('../../clean_data/students_bundesland_gender_foreigner_ws1998_99_ws2016_17.xlsx')
 df_un_bl_year = pd.read_excel('../../clean_data/university_bundesland_year.xlsx')
 unis = pd.read_excel('../../data/geocoordinate_university.xlsx')
+tooltip =  pd.read_pickle("../../tooltip_geojson.pkl")
+
+#Convert dataframe to geodataframe
+tooltip_gdf = gpd.GeoDataFrame(tooltip)
+tooltip_gdf.crs = fiona.crs.from_epsg(4326)
+
 
 MIN_STUDENTS_AMOUNT_ALL_ALL = df['Insgesamt, Insgesamt'].min()
 
 MAX_STUDENTS_AMOUNT_ALL_ALL = df['Insgesamt, Insgesamt'].max()
+
+#Filter data relevant to selected year
+# def filter_year(data, year):
+#     return data[data.Semester == year]
+
 
 
 # route to the new template and send value from url
 @app.route('/map/')
 @app.route('/map/<year>')
 def map(year='WS_1998_99'):
+
+    # df_year = filter_year(df, year)
     df_year = df[df.Semester == year]
+
     bins = create_bins(MIN_STUDENTS_AMOUNT_ALL_ALL, MAX_STUDENTS_AMOUNT_ALL_ALL, 7)
 
     create_choropleth(geo_data=state_geo, data=df_year, columns=['Bundesland', 'Insgesamt, Insgesamt'],
                       legend='Studentenanzahl',
                       bins=bins,
                       gethtml=False)
+
+    # folium.GeoJson(data=geotest['geometry'], tooltip=folium.features.GeoJsonTooltip(fields=['NAME_1', columns],
+    #                                                aliases=['Bundesland', 'Studierende'],
+    #                                                labels=True,
+    #                                                sticky=True)).add_to(m)
+
 
     return render_template('index.html', selected_year=year, years=YEARS)
 
@@ -180,9 +203,10 @@ def timemap():
 
 # Create choropleth
 def create_choropleth(geo_data, data, columns, legend, bins, gethtml):
+
     m = folium.Map(location=[52, 13], tiles="Openstreetmap", zoom_start=6)
 
-    m.choropleth(
+    folium.Choropleth(
         geo_data=geo_data,
         name='choropleth',
         data=data,
@@ -194,10 +218,15 @@ def create_choropleth(geo_data, data, columns, legend, bins, gethtml):
         legend_name=legend,
         bins=bins,
         highlight=True
-    )
+    ).add_to(m)
 
-    folium.GeoJson(data=geo_data, tooltip=folium.features.GeoJsonTooltip(fields=['NAME_1'],
-                                                   aliases=['Bundesland'],
+    print(data.Semester.values[0])
+    temp = tooltip_gdf[tooltip_gdf.Semester == data.Semester.values[0]]
+    folium.GeoJson(temp,
+                   style_function=lambda x: {'fillColor': '#00000000', 'color': '#00000000'},
+                   highlight_function=lambda x: {'weight':3, 'color':'black'},
+                   tooltip=folium.features.GeoJsonTooltip(fields=columns,
+                                                   aliases=['Bundesland', 'Studierende'],
                                                    labels=True,
                                                    sticky=True)).add_to(m)
 
