@@ -307,6 +307,30 @@ def create_timemap(geo_data, style_dict, gethtml=False):
     )
     g.add_to(m)
 
+    #Create legend
+    legend_html = '''
+    <div style ='position: fixed;
+    bottom: 30px;
+    right: 27%;
+    width: 220px;
+    height: 120px;
+    background-color: white;
+    //border: 1px solid grey;
+    z-index: 9999;
+    font-size: 12px;
+    padding: 10px 5px 5px 10px;
+    -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);
+    -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);
+    box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);'>
+    <p><b>Legende</b> </p>
+    <i class="fa fa-circle" style ='color: #d7191c; margin-right: 3px;'></i> Universität </br>
+    <i class="fa fa-circle" style ='color: #fdae61; margin-right: 3px;'></i> Fachhochschulen / HAW</br>
+    <i class="fa fa-circle" style ='color: #5e3c99; margin-right: 3px;'></i> Kunst- und Musikhochschulen</br>
+    <i class="fa fa-circle" style ='color: #008837; margin-right: 3px;'></i> Hochschulen eigenen Typs</br></div>
+    '''
+
+    m.get_root().html.add_child(folium.Element(legend_html))
+
     if gethtml:
         print("no html update")
         return m.get_root().render()

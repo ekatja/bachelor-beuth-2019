@@ -17,7 +17,7 @@
     
     <meta name="viewport" content="width=device-width,
         initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <style>#map_039de4ccaf5048aeb333f935be8ade8c {
+    <style>#map_8ee516be4f0544a8ae5d0c3e2988c1a6 {
         position: relative;
         width: 100.0%;
         height: 100.0%;
@@ -29,7 +29,27 @@
 </head>
 <body>    
     
-    <div class="folium-map" id="map_039de4ccaf5048aeb333f935be8ade8c" ></div>
+    <div style ='position: fixed;
+    bottom: 30px;
+    right: 27%;
+    width: 220px;
+    height: 120px;
+    background-color: white;
+    //border: 1px solid grey;
+    z-index: 9999;
+    font-size: 12px;
+    padding: 10px 5px 5px 10px;
+    -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);
+    -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);
+    box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);'>
+    <p><b>Legende</b> </p>
+    <i class="fa fa-circle" style ='color: #d7191c; margin-right: 3px;'></i> Universität </br>
+    <i class="fa fa-circle" style ='color: #fdae61; margin-right: 3px;'></i> Fachhochschulen / HAW</br>
+    <i class="fa fa-circle" style ='color: #5e3c99; margin-right: 3px;'></i> Kunst- und Musikhochschulen</br>
+    <i class="fa fa-circle" style ='color: #008837; margin-right: 3px;'></i> Hochschulen eigenen Typs</br></div>
+    
+    
+    <div class="folium-map" id="map_8ee516be4f0544a8ae5d0c3e2988c1a6" ></div>
 </body>
 <script>    
     
@@ -37,8 +57,8 @@
         var bounds = null;
     
 
-    var map_039de4ccaf5048aeb333f935be8ade8c = L.map(
-        'map_039de4ccaf5048aeb333f935be8ade8c', {
+    var map_8ee516be4f0544a8ae5d0c3e2988c1a6 = L.map(
+        'map_8ee516be4f0544a8ae5d0c3e2988c1a6', {
         center: [51, 13],
         zoom: 6,
         maxBounds: bounds,
@@ -50,7 +70,7 @@
 
     
     
-    var tile_layer_9c8b92ca41eb49bba5555d9bafdf1d11 = L.tileLayer(
+    var tile_layer_10351a81c9ee465197ea60b7a19b5f99 = L.tileLayer(
         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         {
         "attribution": null,
@@ -62,7 +82,7 @@
         "opacity": 1,
         "subdomains": "abc",
         "tms": false
-}).addTo(map_039de4ccaf5048aeb333f935be8ade8c);
+}).addTo(map_8ee516be4f0544a8ae5d0c3e2988c1a6);
     
             document.addEventListener("DOMContentLoaded", function(event) {
  
@@ -2775,7 +2795,7 @@
                 }
        
                 fill_map = function(){
-                    map = map_039de4ccaf5048aeb333f935be8ade8c;
+                    map = map_8ee516be4f0544a8ae5d0c3e2988c1a6;
                     markers = markersDict[current_timestamp];
                     markers.forEach(function(element) {
                         element.addTo(map);
@@ -2790,7 +2810,7 @@
                     }
                 }
                 clear_map = function(){
-                    map = map_039de4ccaf5048aeb333f935be8ade8c;
+                    map = map_8ee516be4f0544a8ae5d0c3e2988c1a6;
                     //console.log(current_timestamp);
                     
                     for (var year in markersDict ){
