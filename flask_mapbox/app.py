@@ -1,5 +1,6 @@
 import json
 import folium
+from folium import plugins
 import pandas as pd
 import geopandas as gpd
 import xlrd
@@ -9,8 +10,9 @@ from geojson import Point, Feature
 import fiona.crs
 # import geojson
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash, jsonify
-from time_slider_marker import TimeSliderMarker
-from custom_polyline import CustomPolyLine
+# from time_slider_marker import TimeSliderMarker
+# from custom_polyline import CustomPolyLine
+from . import CustomArcPath
 
 from jinja2 import Template
 from branca.colormap import linear
@@ -218,31 +220,31 @@ def create_connection_map():
         highlight=True
     ).add_to(m)
 
-    CustomPolyLine(
-        # [
-        [[52.520008, 13.404954], [51.75631, 14.332868],
-         [52.520008, 13.404954], [47.997791, 7.842609],
-         [52.520008, 13.404954], [48.521637, 9.057645]
-         # ],
-         # [[47.997791, 7.842609], [51.75631, 14.332868],
-         #  [47.997791, 7.842609], [50.520008, 11.404954],
-         #  [47.997791, 7.842609], [48.521637, 9.057645]]
-         ],
-        weight=2,
-        color='#8EE9FF'
-    ).add_to(m)
+    for feature in state_geo['features']:
+        if feature['properties']['NAME_1'] != 'Berlin':
+            CustomArcPath(state_geo['features'][2]['geometry']['coordinates'],
+                          feature['geometry']['coordinates'],
+                          weight=1,
+                        color='red').add_to(m)
 
-    # m.save(outfile='templates/place-of-study.html')
 
-    # return m.get_root().render()
-    return render_template('place-of-study.html')
-    # create_choropleth(state_geo,
-    #                   data=test,
-    #                   columns=['Bundesland_Studienort', 'Berlin'],
-    #                   legend = 'Studienort',
-    #                   bins =[test[:-1].Berlin.min(), 5000, 10000, 20000, 30000, test[:-1].Berlin.max()+1],
-    #                   gethtml=True)
+    #m.save(outfile='templates/place-of-study.html')
 
+
+    # return render_template('place-of-study.html')
+    return m.get_root().render()
+
+@app.route('/test-arcpath')
+def create_test():
+    m = folium.Map(location=[52, 13], tiles="Openstreetmap", zoom_start=6)
+
+
+    for feature in state_geo['features']:
+        if feature['properties']['NAME_1'] != 'Berlin':
+            CustomArcPath(state_geo['features'][2]['geometry']['coordinates'], feature['geometry']['coordinates']).add_to(m)
+
+
+    return m.get_root().render()
 
 # Create choropleth
 def create_choropleth(geo_data, data, columns, legend, bins, gethtml):
@@ -344,7 +346,7 @@ def create_unis_dict(data):
 # Create TimeSliderMarker map
 def create_timemap(geo_data, style_dict, gethtml=False):
     m = folium.Map(location=[51, 13], tiles="Openstreetmap", zoom_start=6)
-    g = TimeSliderMarker(
+    g = plugins.TimeSliderMarker(
         data=geo_data,
         styledict=style_dict,
     )
