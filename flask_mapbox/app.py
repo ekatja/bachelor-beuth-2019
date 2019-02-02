@@ -10,6 +10,7 @@ import fiona.crs
 # import geojson
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash, jsonify
 from time_slider_marker import TimeSliderMarker
+from custom_polyline import CustomPolyLine
 
 from jinja2 import Template
 from branca.colormap import linear
@@ -84,6 +85,9 @@ df = pd.read_excel('../../clean_data/students_bundesland_gender_foreigner_ws1998
 df_un_bl_year = pd.read_excel('../../clean_data/university_bundesland_year.xlsx')
 unis = pd.read_excel('../../data/geocoordinate_university.xlsx')
 tooltip =  pd.read_pickle("../../tooltip_geojson.pkl")
+# Study place vs. place where study permition was issued
+study_place = pd.read_excel('../../clean_data/students_gender_study_place_vs_study_permission_ws2006_07_ws2017_18.xlsx')
+
 
 #Convert dataframe to geodataframe
 tooltip_gdf = gpd.GeoDataFrame(tooltip)
@@ -115,17 +119,10 @@ def map(year='WS_1998_99'):
                       bins=bins,
                       gethtml=False)
 
-    # folium.GeoJson(data=geotest['geometry'], tooltip=folium.features.GeoJsonTooltip(fields=['NAME_1', columns],
-    #                                                aliases=['Bundesland', 'Studierende'],
-    #                                                labels=True,
-    #                                                sticky=True)).add_to(m)
-
-
     return render_template('index.html', selected_year=year, years=YEARS)
 
 
 @app.route('/mapupdate/', methods=['POST'])
-# @app.route('/mapupdate/<year>', methods=['GET'])
 def mapupdate(dataframe='st_bd', year="WS_2016_17", nationality='Insgesamt', gender='Insgesamt'):
 
     #TODO: a = [v for v in request.form]
@@ -166,9 +163,6 @@ def mapupdate(dataframe='st_bd', year="WS_2016_17", nationality='Insgesamt', gen
         return map
 
     else:
-        # unis_dict = create_unis_dict(unis)
-        # map = create_timemap(geo_data=state_geo, style_dict= unis_dict, gethtml=True)
-        # return map
 
         return redirect('/university-foundation-year')
 
@@ -201,6 +195,55 @@ def timemap():
     create_timemap(state_geo, style_dict, False)
     return render_template('uni_year.html')
 
+@app.route('/place-of-study/')
+def create_connection_map():
+
+    test = study_place.loc[(study_place.WS == '2006/2007') & (study_place.Geschlecht == 'Insgesamt')]
+    # print(test[:-1])
+    # print(test[:-1].Berlin.min(), test[:-1].Berlin.max())
+
+    m = folium.Map(location=[52, 13], tiles="Openstreetmap", zoom_start=6)
+
+    folium.Choropleth(
+        geo_data=state_geo,
+        name='choropleth',
+        data=test[:-1],
+        columns=['Bundesland_Studienort', 'Berlin'],
+        key_on='feature.properties.NAME_1',
+        fill_color='OrRd',
+        fill_opacity=0.7,
+        line_opacity=0.2,
+        legend_name='Studienort',
+        bins=[test[:-1].Berlin.min(), 5000, 10000, 20000, 30000, test[:-1].Berlin.max()+1],
+        highlight=True
+    ).add_to(m)
+
+    CustomPolyLine(
+        # [
+        [[52.520008, 13.404954], [51.75631, 14.332868],
+         [52.520008, 13.404954], [47.997791, 7.842609],
+         [52.520008, 13.404954], [48.521637, 9.057645]
+         # ],
+         # [[47.997791, 7.842609], [51.75631, 14.332868],
+         #  [47.997791, 7.842609], [50.520008, 11.404954],
+         #  [47.997791, 7.842609], [48.521637, 9.057645]]
+         ],
+        weight=2,
+        color='#8EE9FF'
+    ).add_to(m)
+
+    # m.save(outfile='templates/place-of-study.html')
+
+    # return m.get_root().render()
+    return render_template('place-of-study.html')
+    # create_choropleth(state_geo,
+    #                   data=test,
+    #                   columns=['Bundesland_Studienort', 'Berlin'],
+    #                   legend = 'Studienort',
+    #                   bins =[test[:-1].Berlin.min(), 5000, 10000, 20000, 30000, test[:-1].Berlin.max()+1],
+    #                   gethtml=True)
+
+
 # Create choropleth
 def create_choropleth(geo_data, data, columns, legend, bins, gethtml):
 
@@ -220,7 +263,7 @@ def create_choropleth(geo_data, data, columns, legend, bins, gethtml):
         highlight=True
     ).add_to(m)
 
-    print(data.Semester.values[0])
+    # print(data.Semester.values[0])
     temp = tooltip_gdf[tooltip_gdf.Semester == data.Semester.values[0]]
     folium.GeoJson(temp,
                    style_function=lambda x: {'fillColor': '#00000000', 'color': '#00000000'},
@@ -323,10 +366,10 @@ def create_timemap(geo_data, style_dict, gethtml=False):
     -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);
     box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);'>
     <p><b>Legende</b> </p>
-    <i class="fa fa-circle" style ='color: #d7191c; margin-right: 3px;'></i> Universität </br>
-    <i class="fa fa-circle" style ='color: #fdae61; margin-right: 3px;'></i> Fachhochschulen / HAW</br>
-    <i class="fa fa-circle" style ='color: #5e3c99; margin-right: 3px;'></i> Kunst- und Musikhochschulen</br>
-    <i class="fa fa-circle" style ='color: #008837; margin-right: 3px;'></i> Hochschulen eigenen Typs</br></div>
+    <i class="far fa-circle" style ='color: #d7191c; margin-right: 3px; -webkit-text-stroke: 1px #d7191c;'></i> Universität </br>
+    <i class="far fa-circle" style ='color: #fdae61; margin-right: 3px; -webkit-text-stroke: 1px #fdae61;'></i> Fachhochschulen / HAW</br>
+    <i class="far fa-circle" style ='color: #5e3c99; margin-right: 3px; -webkit-text-stroke: 1px #5e3c99;'></i> Kunst- und Musikhochschulen</br>
+    <i class="far fa-circle" style ='color: #008837; margin-right: 3px; -webkit-text-stroke: 1px #008837;'></i> Hochschulen eigenen Typs</br></div>
     '''
 
     m.get_root().html.add_child(folium.Element(legend_html))
