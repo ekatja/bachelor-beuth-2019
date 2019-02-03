@@ -2,7 +2,9 @@ import json
 import folium
 from folium import plugins
 import pandas as pd
+import numpy as np
 import geopandas as gpd
+from pprint import pprint
 import xlrd
 import requests
 import branca
@@ -10,7 +12,7 @@ from geojson import Point, Feature
 import fiona.crs
 # import geojson
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash, jsonify
-# from time_slider_marker import TimeSliderMarker
+from . import TimeSliderMarker
 # from custom_polyline import CustomPolyLine
 from . import CustomArcPath
 
@@ -45,6 +47,7 @@ YEARS = {
     "WS_2015_16": '2015/16',
     "WS_2016_17": '2016/17'
 }
+
 
 # geo-coordinate points along the route
 ROUTE = [
@@ -95,10 +98,13 @@ study_place = pd.read_excel('../../clean_data/students_gender_study_place_vs_stu
 tooltip_gdf = gpd.GeoDataFrame(tooltip)
 tooltip_gdf.crs = fiona.crs.from_epsg(4326)
 
-
+#Const
 MIN_STUDENTS_AMOUNT_ALL_ALL = df['Insgesamt, Insgesamt'].min()
 
 MAX_STUDENTS_AMOUNT_ALL_ALL = df['Insgesamt, Insgesamt'].max()
+
+STATES = np.unique(study_place.Bundesland_Studienort.values)
+YEARS_STUDY_PLACE = np.unique(study_place.WS.values)
 
 #Filter data relevant to selected year
 # def filter_year(data, year):
@@ -125,7 +131,7 @@ def map(year='WS_1998_99'):
 
 
 @app.route('/mapupdate/', methods=['POST'])
-def mapupdate(dataframe='st_bd', year="WS_2016_17", nationality='Insgesamt', gender='Insgesamt'):
+def students_state_mapupdate(dataframe='st_bd', year="WS_2016_17", nationality='Insgesamt', gender='Insgesamt'):
 
     #TODO: a = [v for v in request.form]
 
@@ -198,41 +204,94 @@ def timemap():
     return render_template('uni_year.html')
 
 @app.route('/place-of-study/')
-def create_connection_map():
-
+def place_of_study(year='2006/2007', state='Berlin'):
     test = study_place.loc[(study_place.WS == '2006/2007') & (study_place.Geschlecht == 'Insgesamt')]
-    # print(test[:-1])
-    # print(test[:-1].Berlin.min(), test[:-1].Berlin.max())
+    create_connected_map(data=test, column='Berlin', legend='Studienort', gethtml=True)
 
+    return render_template('place-of-study.html', selected_year=year, selected_state = state, states = STATES, years = YEARS_STUDY_PLACE)
+
+@app.route('/study-place-mapupdate/', methods=['POST'])
+def study_place_mapupdate(dataframe='place-of-study', year="2017/2018", gender='Insgesamt', state='Berlin'):
+
+    #TODO: a = [v for v in request.form]
+
+    print("Got request",request.form)
+
+    if request.form['dataframe']:
+        print("dataframe from form", request.form['dataframe'])
+        dataframe = request.form['dataframe']
+
+    if request.form['year']:
+        print("year from form", request.form['year'])
+        year = request.form['year']
+
+    if request.form['gender']:
+        print('gender from form', request.form['gender'])
+        gender = request.form['gender']
+
+    if request.form['state']:
+        print('state from form', request.form['state'])
+        state = request.form['state']
+
+    if dataframe == 'place-of-study':
+        study_place_year = study_place[study_place.WS == year]
+        column = state
+        print(column)
+        print(study_place_year[column])
+
+        map = create_connected_map(data=study_place_year, column=column,
+                                legend='Studienort',
+                                gethtml=True)
+        return map
+
+    else:
+
+        return redirect('/place-of-study')
+
+def create_connected_map(data, column, legend, gethtml):
+
+    print('column', column)
     m = folium.Map(location=[52, 13], tiles="Openstreetmap", zoom_start=6)
+
+    bins = create_bins(data[column].min(), data[column].max(), 7)
+    print(bins)
 
     folium.Choropleth(
         geo_data=state_geo,
         name='choropleth',
-        data=test[:-1],
-        columns=['Bundesland_Studienort', 'Berlin'],
+        data=data,
+        columns=['Bundesland_Studienort', str(column)],
         key_on='feature.properties.NAME_1',
         fill_color='OrRd',
         fill_opacity=0.7,
         line_opacity=0.2,
-        legend_name='Studienort',
-        bins=[test[:-1].Berlin.min(), 5000, 10000, 20000, 30000, test[:-1].Berlin.max()+1],
+        legend_name=legend,
+        bins=bins,
         highlight=True
     ).add_to(m)
 
+    init_index = 0
+    for n, feature in enumerate(state_geo['features']):
+        if feature['properties']['NAME_1'] == str(column):
+            init_index = n
+            break
+
     for feature in state_geo['features']:
-        if feature['properties']['NAME_1'] != 'Berlin':
-            CustomArcPath(state_geo['features'][2]['geometry']['coordinates'],
+        # print(n, feature['properties']['NAME_1'])
+        if feature['properties']['NAME_1'] != str(column):
+            # print(feature['id'])
+            CustomArcPath(state_geo['features'][init_index]['geometry']['coordinates'],
                           feature['geometry']['coordinates'],
                           weight=1,
-                        color='red').add_to(m)
+                          color='red').add_to(m)
 
+    if gethtml:
+        print("no html update")
+        return m.get_root().render()
+    else:
+        print("new map.html")
+        m.save(outfile='templates/map-place-of-study.html')
 
-    #m.save(outfile='templates/place-of-study.html')
-
-
-    # return render_template('place-of-study.html')
-    return m.get_root().render()
 
 @app.route('/test-arcpath')
 def create_test():
@@ -286,6 +345,7 @@ def create_choropleth(geo_data, data, columns, legend, bins, gethtml):
 
 # Create bins for choropleth and round to thousands
 def create_bins(start, end, number):
+    #TODO add intelligent round option
     bins = []
     step = (end - start) / number
     bins.append(start)
@@ -346,7 +406,7 @@ def create_unis_dict(data):
 # Create TimeSliderMarker map
 def create_timemap(geo_data, style_dict, gethtml=False):
     m = folium.Map(location=[51, 13], tiles="Openstreetmap", zoom_start=6)
-    g = plugins.TimeSliderMarker(
+    g = TimeSliderMarker(
         data=geo_data,
         styledict=style_dict,
     )

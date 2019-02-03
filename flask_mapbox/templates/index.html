@@ -3,6 +3,11 @@
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon-32x32.png') }}" sizes="32x32"/>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon-16x16.png') }}" sizes="16x16"/>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+    <title>Studierende in Deutschland</title>
 
     <!--Bootstrap-->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
@@ -37,40 +42,47 @@
                     <select class="custom-select d-block w-100 mr-4" id="data-selector">
                         <option value="st_bd">Studierende nach Bundesländer</option>
                         <option value="university-foundation-year">Hochschulen nach Gründungsjahr</option>
-                        <option>Noch eine Option</option>
+                        <option value="place-of-study">Studienort vs. Land des Erwerbs der
+                            Hochschulzugangsberechtigung
+                        </option>
                     </select>
                 </div>
                 <!-- Selector -->
-
+            </form>
+            <form id="options-selector-form">
                 <!-- Nationality Checkbox -->
                 <div class="form-group" id="form-nationality">
                     <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" name="nationality" id="nationalityRadio1" value="Insgesamt" checked>
-                      <label class="form-check-label" for="nationalityRadio1">Insgesamt</label>
+                        <input class="form-check-input" type="radio" name="nationality" id="nationalityRadio1"
+                               value="Insgesamt" checked>
+                        <label class="form-check-label" for="nationalityRadio1">Insgesamt</label>
                     </div>
                     <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" name="nationality" id="nationalityRadio2" value="Deutsche">
-                      <label class="form-check-label" for="nationalityRadio2">Deutsche</label>
+                        <input class="form-check-input" type="radio" name="nationality" id="nationalityRadio2"
+                               value="Deutsche">
+                        <label class="form-check-label" for="nationalityRadio2">Deutsche</label>
                     </div>
                     <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" name="nationality" id="nationalityRadio3" value="Ausländer">
-                      <label class="form-check-label" for="nationalityRadio3">Ausländer</label>
+                        <input class="form-check-input" type="radio" name="nationality" id="nationalityRadio3"
+                               value="Ausländer">
+                        <label class="form-check-label" for="nationalityRadio3">Ausländer</label>
                     </div>
                 </div>
                 <!-- Nationality Checkbox -->
                 <!-- Gender Checkbox -->
                 <div class="form-group" id="form-gender">
                     <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" name="gender" id="genderRadio1" value="Insgesamt" checked>
-                      <label class="form-check-label" for="genderRadio1">Insgesamt</label>
+                        <input class="form-check-input" type="radio" name="gender" id="genderRadio1" value="Insgesamt"
+                               checked>
+                        <label class="form-check-label" for="genderRadio1">Insgesamt</label>
                     </div>
                     <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" name="gender" id="genderRadio2" value="männlich">
-                      <label class="form-check-label" for="genderRadio2">männlich</label>
+                        <input class="form-check-input" type="radio" name="gender" id="genderRadio2" value="männlich">
+                        <label class="form-check-label" for="genderRadio2">männlich</label>
                     </div>
                     <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" name="gender" id="genderRadio3" value="weiblich">
-                      <label class="form-check-label" for="genderRadio3">weiblich</label>
+                        <input class="form-check-input" type="radio" name="gender" id="genderRadio3" value="weiblich">
+                        <label class="form-check-label" for="genderRadio3">weiblich</label>
                     </div>
                 </div>
                 <!-- Gender Checkbox -->
@@ -78,9 +90,10 @@
                 <div class="mb-3" id="form-year">
                     <label for="year-selector">Wintersemester:</label>
                     <select class="custom-select d-block w-100 mr-4" id="year-selector">
-                    <!-- add option using template -->
+                        <!-- add option using template -->
                         {% for k,v in years.items() %}
-                            <option value="{{ k }}" {{ 'selected' if k == selected_year }} >{{ v }}</option>
+                        <option value="{{ k }}" {{
+                        'selected' if k == selected_year }} >{{ v }}</option>
                         {% endfor %}
                     </select>
 

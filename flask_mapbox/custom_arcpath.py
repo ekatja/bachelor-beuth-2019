@@ -40,20 +40,16 @@ class CustomArcPath(Marker):
             try {
                 var from_poly = L.polygon({{this.location[0]}}).addTo({{this._parent.get_name()}});
                 var from = from_poly.getBounds().getCenter();
-                console.log(from_poly);
                 L.marker([from.lng, from.lat]).addTo({{this._parent.get_name()}});
-                console.log('from',from);
                 }
             catch(err) {
                 console.log('location[0] is a point', err);
-                console.log({{this.location[0]}}[0]);
                 var from = {{this.location[0]}};
             }
             try {
                 var to_poly = L.polygon({{this.location[1]}}).addTo({{this._parent.get_name()}});
                 var to = to_poly.getBounds().getCenter();
                 L.marker([to.lng, to.lat]).addTo({{this._parent.get_name()}});
-                console.log('to',to);
                 }
             catch(err) {
                 console.log('location[1] is a point', err);
@@ -61,6 +57,7 @@ class CustomArcPath(Marker):
             }
             from_poly.remove();
             to_poly.remove();
+            
                 {{this.get_name()}} = L.Polyline.Arc(
                   [from.lng, from.lat],
                   [to.lng, to.lat],
