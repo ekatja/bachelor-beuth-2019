@@ -57,7 +57,6 @@ class CustomArcPath(Marker):
             }
             from_poly.remove();
             to_poly.remove();
-            
                 {{this.get_name()}} = L.Polyline.Arc(
                   [from.lng, from.lat],
                   [to.lng, to.lat],
@@ -73,22 +72,6 @@ class CustomArcPath(Marker):
     def __init__(self, locations_from, locations_to, popup=None, tooltip=None, **kwargs):
 
         locations = [locations_from, locations_to]
-        # print(locations)
-
-        # if isinstance(locations_from, dict):
-        #     locations[0] = self.calculate_centroids(locations_from)
-        # elif isinstance(locations_from, list):
-        #     locations[0] = locations_from
-        # else:
-        #     raise ValueError("locations_from of unsupported format", type(locations_from))
-        #
-        # if isinstance(locations_to, dict):
-        #     locations[1] = self.calculate_centroids(locations_to)
-        # elif isinstance(locations_to, list):
-        #     locations[1] = locations_to
-        # else:
-        #     raise ValueError("locations_to of unsupported format", type(locations_to))
-
 
         super(CustomArcPath, self).__init__(
             location=locations,
@@ -127,6 +110,7 @@ class CustomArcPath(Marker):
         #     name='antpath',
         # )
         figure.header.add_child(
-            JavascriptLink('https://unpkg.com/leaflet-arc/bin/leaflet-arc.min.js'),  # noqa
+            # JavascriptLink('https://unpkg.com/leaflet-arc/bin/leaflet-arc.min.js'),  # noqa
+            JavascriptLink('/static/js/leaflet-arc.min.js'),
             name='arcpath',
         )

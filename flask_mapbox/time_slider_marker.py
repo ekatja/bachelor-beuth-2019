@@ -106,7 +106,6 @@ class TimeSliderMarker(GeoJson):
                 }
                 clear_map = function(){
                     map = {{this._parent.get_name()}};
-                    //console.log(current_timestamp);
                     
                     for (var year in markersDict ){
                         if(year > current_timestamp){

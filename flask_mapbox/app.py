@@ -89,14 +89,18 @@ with open('../../geodata/geo_germany.geojson') as data_file:
 df = pd.read_excel('../../clean_data/students_bundesland_gender_foreigner_ws1998_99_ws2016_17.xlsx')
 df_un_bl_year = pd.read_excel('../../clean_data/university_bundesland_year.xlsx')
 unis = pd.read_excel('../../data/geocoordinate_university.xlsx')
-tooltip =  pd.read_pickle("../../tooltip_geojson.pkl")
 # Study place vs. place where study permition was issued
 study_place = pd.read_excel('../../clean_data/students_gender_study_place_vs_study_permission_ws2006_07_ws2017_18.xlsx')
 
+# dataset for tooltips
+tooltip =  pd.read_pickle("../../tooltip_geojson.pkl")
+tooltip_place_of_study = pd.read_pickle('../../clean_data/tooltip_place_of_study_geojson.pkl')
 
 #Convert dataframe to geodataframe
 tooltip_gdf = gpd.GeoDataFrame(tooltip)
 tooltip_gdf.crs = fiona.crs.from_epsg(4326)
+tooltip_place_of_study_gdf = gpd.GeoDataFrame(tooltip_place_of_study)
+tooltip_place_of_study_gdf.crs = fiona.crs.from_epsg(4326)
 
 #Const
 MIN_STUDENTS_AMOUNT_ALL_ALL = df['Insgesamt, Insgesamt'].min()
@@ -105,11 +109,6 @@ MAX_STUDENTS_AMOUNT_ALL_ALL = df['Insgesamt, Insgesamt'].max()
 
 STATES = np.unique(study_place.Bundesland_Studienort.values)
 YEARS_STUDY_PLACE = np.unique(study_place.WS.values)
-
-#Filter data relevant to selected year
-# def filter_year(data, year):
-#     return data[data.Semester == year]
-
 
 
 # route to the new template and send value from url
@@ -169,9 +168,7 @@ def students_state_mapupdate(dataframe='st_bd', year="WS_2016_17", nationality='
                                 bins=bins,
                                 gethtml=True)
         return map
-
     else:
-
         return redirect('/university-foundation-year')
 
 
@@ -204,9 +201,12 @@ def timemap():
     return render_template('uni_year.html')
 
 @app.route('/place-of-study/')
-def place_of_study(year='2006/2007', state='Berlin'):
-    test = study_place.loc[(study_place.WS == '2006/2007') & (study_place.Geschlecht == 'Insgesamt')]
-    create_connected_map(data=test, column='Berlin', legend='Studienort', gethtml=True)
+def place_of_study(year='2006/2007', state='Berlin', gender='Insgesamt'):
+
+    df_study_place = study_place.loc[(study_place.WS == year) & (study_place.Geschlecht == gender)]
+    bins = create_bins(study_place.loc[study_place.Geschlecht == gender][state].min(), study_place.loc[study_place.Geschlecht == gender][state].max(), 7)
+
+    create_connected_map(data=df_study_place, column=state, legend='Studienort', bins=bins, gethtml=False)
 
     return render_template('place-of-study.html', selected_year=year, selected_state = state, states = STATES, years = YEARS_STUDY_PLACE)
 
@@ -234,27 +234,23 @@ def study_place_mapupdate(dataframe='place-of-study', year="2017/2018", gender='
         state = request.form['state']
 
     if dataframe == 'place-of-study':
-        study_place_year = study_place[study_place.WS == year]
         column = state
-        print(column)
-        print(study_place_year[column])
+        study_place_year = study_place.loc[(study_place.WS == year) & (study_place.Geschlecht == gender)]
+
+        bins = create_bins(study_place.loc[study_place.Geschlecht == gender][state].min(),
+                           study_place.loc[study_place.Geschlecht == gender][state].max(), 7)
 
         map = create_connected_map(data=study_place_year, column=column,
-                                legend='Studienort',
+                                legend='Studienort', bins=bins,
                                 gethtml=True)
         return map
-
     else:
-
         return redirect('/place-of-study')
 
-def create_connected_map(data, column, legend, gethtml):
 
-    print('column', column)
+def create_connected_map(data, column, legend, bins, gethtml):
+
     m = folium.Map(location=[52, 13], tiles="Openstreetmap", zoom_start=6)
-
-    bins = create_bins(data[column].min(), data[column].max(), 7)
-    print(bins)
 
     folium.Choropleth(
         geo_data=state_geo,
@@ -279,11 +275,23 @@ def create_connected_map(data, column, legend, gethtml):
     for feature in state_geo['features']:
         # print(n, feature['properties']['NAME_1'])
         if feature['properties']['NAME_1'] != str(column):
-            # print(feature['id'])
+            # print(feature['properties']['NAME_1'])
             CustomArcPath(state_geo['features'][init_index]['geometry']['coordinates'],
                           feature['geometry']['coordinates'],
                           weight=1,
                           color='red').add_to(m)
+
+    # Add tooltips to each state
+    temp = tooltip_place_of_study_gdf.loc[(tooltip_place_of_study_gdf.WS == data.WS.values[0]) & (tooltip_place_of_study_gdf.Geschlecht == data.Geschlecht.values[0])]
+    folium.GeoJson(temp,
+                   style_function=lambda x: {'fillColor': '#00000000', 'color': '#00000000'},
+                   highlight_function=lambda x: {'weight': 2, 'color': 'grey'},
+                   tooltip=folium.features.GeoJsonTooltip(fields=['Bundesland_Studienort', str(column)],
+                                                          aliases=['Bundesland', 'Studierende'],
+                                                          labels=True,
+                                                          sticky=True)).add_to(m)
+
+    folium.LayerControl().add_to(m)
 
     if gethtml:
         print("no html update")
@@ -324,7 +332,7 @@ def create_choropleth(geo_data, data, columns, legend, bins, gethtml):
         highlight=True
     ).add_to(m)
 
-    # print(data.Semester.values[0])
+    #Add tooltips to each state
     temp = tooltip_gdf[tooltip_gdf.Semester == data.Semester.values[0]]
     folium.GeoJson(temp,
                    style_function=lambda x: {'fillColor': '#00000000', 'color': '#00000000'},
