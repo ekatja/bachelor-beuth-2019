@@ -1,94 +1,28 @@
-<!DOCTYPE html>
-<html lang='DE'>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+{% extends 'base.html' %}
 
-    <!--Bootstrap-->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
-          integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-            crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
-            integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
-            crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
-            integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
-            crossorigin="anonymous"></script>
-    <!--End Bootstrap-->
+{% block map %}
+{% include 'map-place-of-study.html' %}
+{% endblock %}
 
-    <link rel="stylesheet" href="../static/css/style.css"/>
+{% block data %}
+    {{ super() }}
+{% endblock%}
 
-</head>
-<body>
-<div class="container-fluid h-100">
-    <div class="row justify-content-end h-100">
-        <div class="col-md-9 h-100" id="folium-map">
-            {% include 'map-place-of-study.html' %}
-        </div>
-        <div class="col-md-3 h-100 pr-5">
-            <h2 class="mb-3">Studierende in Deutschland</h2>
+{% block gender %}
+    {{ super() }}
+{% endblock %}
 
-            <form id="data-selector-form">
-                <!-- Data Selector -->
-                <div class="mb-3">
-                    <label for="data-selector">Wähle die Daten aus:</label>
-                    <select class="custom-select d-block w-100 mr-4" id="data-selector">
-                        <option value="st_bd">Studierende nach Bundesländer</option>
-                        <option value="university-foundation-year">Hochschulen nach Gründungsjahr</option>
-                        <option value="place-of-study" selected>Studienort vs. Land des Erwerbs der Hochschulzugangsberechtigung</option>
-                    </select>
-                </div>
-                <!-- Selector -->
-            </form>
-            <form id="options-selector-form">
-                <!-- Gender Checkbox -->
-                <div class="form-group" id="form-gender">
-                    <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" name="gender" id="genderRadio1" value="Insgesamt" checked>
-                      <label class="form-check-label" for="genderRadio1">Insgesamt</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" name="gender" id="genderRadio2" value="männlich">
-                      <label class="form-check-label" for="genderRadio2">männlich</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" name="gender" id="genderRadio3" value="weiblich">
-                      <label class="form-check-label" for="genderRadio3">weiblich</label>
-                    </div>
-                </div>
-                <!-- Gender Checkbox -->
-                <!-- Bundesland Selector -->
-                <div class="mb-3" id="form-state">
-                    <label for="state-selector">Land des Erwerbs der Hochschulzugangsberechtigung:</label>
-                    <select class="custom-select d-block w-100 mr-4" id="state-selector">
-                    <!-- add option using template -->
-                        {% for k in states %}
-                            <option value="{{ k }}" {{ 'selected' if k == selected_state }} >{{ k }}</option>
-                        {% endfor %}
-                    </select>
+{% block nationality %}
+{% endblock %}
 
-                </div>
-                <!-- Bundesland Selector -->
-                <!-- Year Selector-->
-                <div class="mb-3" id="form-year">
-                    <label for="year-selector">Wintersemester:</label>
-                    <select class="custom-select d-block w-100 mr-4" id="year-selector">
-                    <!-- add option using template -->
-                        {% for k in years %}
-                            <option value="{{ k }}" {{ 'selected' if k == selected_year }} >{{ k }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <!--Year Selector-->
-            </form>
-            <div class="mb-3" id="year-slider"></div>
+{% block year %}
+    {{ super() }}
+{% endblock %}
 
-        </div>
-    </div>
-</div>
-<script src="../static/js/service.js"></script>
-</body>
+{% block state %}
+    {{ super()}}
+{% endblock%}
 
-</html>
+{% block scripts %}
+    {{ super() }}
+{% endblock %}

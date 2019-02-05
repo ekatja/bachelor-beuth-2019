@@ -103,7 +103,7 @@ def map(year='1998/99'):
                       bins=bins,
                       gethtml=False)
 
-    return render_template('students_state.html', selected_year=year, years=YEARS, page_title='Studierende nach Bundesländer', ds="st_bd")
+    return render_template('students-state.html', selected_year=year, years=YEARS, page_title='Studierende nach Bundesländer', ds="st_bd")
 
 
 @app.route('/mapupdate/', methods=['POST'])
@@ -175,7 +175,7 @@ def newmap():
 def timemap():
     style_dict = create_unis_dict(unis)
     create_timemap(state_geo, style_dict, False)
-    return render_template('test_uni_year.html', page_title='Hochschulen nach Gründungsjahr', ds="university-foundation-year")
+    return render_template('uni-year.html', page_title='Hochschulen nach Gründungsjahr', ds="university-foundation-year")
 
 @app.route('/place-of-study/')
 def place_of_study(year='2006/2007', state='Berlin', gender='Insgesamt'):
@@ -185,7 +185,7 @@ def place_of_study(year='2006/2007', state='Berlin', gender='Insgesamt'):
 
     create_connected_map(data=df_study_place, column=state, legend='Studienort', bins=bins, gethtml=False)
 
-    return render_template('test_place_of_study.html',
+    return render_template('place-of-study.html',
                            selected_year=year,
                            selected_state = state,
                            states = STATES,
@@ -255,9 +255,7 @@ def create_connected_map(data, column, legend, bins, gethtml):
             break
 
     for feature in state_geo['features']:
-        # print(n, feature['properties']['NAME_1'])
         if feature['properties']['NAME_1'] != str(column):
-            # print(feature['properties']['NAME_1'])
             CustomArcPath(state_geo['features'][init_index]['geometry']['coordinates'],
                           feature['geometry']['coordinates'],
                           weight=1,
@@ -438,4 +436,4 @@ def create_timemap(geo_data, style_dict, gethtml=False):
 
 @app.route('/base')
 def base():
-    return render_template('test_uni_year.html')
+    return render_template('uni-year.html')

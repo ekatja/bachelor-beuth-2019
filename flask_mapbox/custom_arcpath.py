@@ -60,7 +60,6 @@ class CustomArcPath(Marker):
                 {{this.get_name()}} = L.Polyline.Arc(
                   [from.lng, from.lat],
                   [to.lng, to.lat],
-                  // from, to,
                   {{ this.options }}
                 )
                 .addTo({{this._parent.get_name()}});
