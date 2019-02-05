@@ -26,29 +26,6 @@ app.config.from_object(__name__)
 app.config.from_envvar('APP_CONFIG_FILE', silent=True)
 # MAPBOX_ACCESS_KEY = app.config['MAPBOX_ACCESS_KEY']
 
-YEARS = {
-    "WS_1998_99": '1998/99',
-    "WS_1999_00": '1999/00',
-    "WS_2000_01": '2000/01',
-    "WS_2001_02": '2001/02',
-    "WS_2002_03": '2002/03',
-    "WS_2003_04": '2003/04',
-    "WS_2004_05": '2004/05',
-    "WS_2005_06": '2005/06',
-    "WS_2006_07": '2006/07',
-    "WS_2007_08": '2007/08',
-    "WS_2008_09": '2008/09',
-    "WS_2009_10": '2009/10',
-    "WS_2010_11": '2010/11',
-    "WS_2011_12": '2011/12',
-    "WS_2012_13": '2012/13',
-    "WS_2013_14": '2013/14',
-    "WS_2014_15": '2014/15',
-    "WS_2015_16": '2015/16',
-    "WS_2016_17": '2016/17'
-}
-
-
 # geo-coordinate points along the route
 ROUTE = [
     {"lat": 52.523, "long": 13.413, 'name': 'Berlin', 'admin1code': ''},
@@ -109,14 +86,14 @@ MAX_STUDENTS_AMOUNT_ALL_ALL = df['Insgesamt, Insgesamt'].max()
 
 STATES = np.unique(study_place.Bundesland_Studienort.values)
 YEARS_STUDY_PLACE = np.unique(study_place.WS.values)
+YEARS = np.unique(df.Semester.values)
 
 
 # route to the new template and send value from url
 @app.route('/map/')
 @app.route('/map/<year>')
-def map(year='WS_1998_99'):
+def map(year='1998/99'):
 
-    # df_year = filter_year(df, year)
     df_year = df[df.Semester == year]
 
     bins = create_bins(MIN_STUDENTS_AMOUNT_ALL_ALL, MAX_STUDENTS_AMOUNT_ALL_ALL, 7)
@@ -126,11 +103,11 @@ def map(year='WS_1998_99'):
                       bins=bins,
                       gethtml=False)
 
-    return render_template('index.html', selected_year=year, years=YEARS)
+    return render_template('students_state.html', selected_year=year, years=YEARS, page_title='Studierende nach Bundesländer', ds="st_bd")
 
 
 @app.route('/mapupdate/', methods=['POST'])
-def students_state_mapupdate(dataframe='st_bd', year="WS_2016_17", nationality='Insgesamt', gender='Insgesamt'):
+def students_state_mapupdate(dataframe='st_bd', year="2016/17", nationality='Insgesamt', gender='Insgesamt'):
 
     #TODO: a = [v for v in request.form]
 
@@ -198,7 +175,7 @@ def newmap():
 def timemap():
     style_dict = create_unis_dict(unis)
     create_timemap(state_geo, style_dict, False)
-    return render_template('uni_year.html')
+    return render_template('test_uni_year.html', page_title='Hochschulen nach Gründungsjahr', ds="university-foundation-year")
 
 @app.route('/place-of-study/')
 def place_of_study(year='2006/2007', state='Berlin', gender='Insgesamt'):
@@ -208,7 +185,12 @@ def place_of_study(year='2006/2007', state='Berlin', gender='Insgesamt'):
 
     create_connected_map(data=df_study_place, column=state, legend='Studienort', bins=bins, gethtml=False)
 
-    return render_template('place-of-study.html', selected_year=year, selected_state = state, states = STATES, years = YEARS_STUDY_PLACE)
+    return render_template('test_place_of_study.html',
+                           selected_year=year,
+                           selected_state = state,
+                           states = STATES,
+                           years = YEARS_STUDY_PLACE,
+                           page_title='Studienort vs. Land des Erwerbs der Hochschulzugangsberechtigung', ds="place-of-study")
 
 @app.route('/study-place-mapupdate/', methods=['POST'])
 def study_place_mapupdate(dataframe='place-of-study', year="2017/2018", gender='Insgesamt', state='Berlin'):
@@ -333,6 +315,7 @@ def create_choropleth(geo_data, data, columns, legend, bins, gethtml):
     ).add_to(m)
 
     #Add tooltips to each state
+    print(data)
     temp = tooltip_gdf[tooltip_gdf.Semester == data.Semester.values[0]]
     folium.GeoJson(temp,
                    style_function=lambda x: {'fillColor': '#00000000', 'color': '#00000000'},
@@ -450,3 +433,9 @@ def create_timemap(geo_data, style_dict, gethtml=False):
     else:
         print("timemap.html")
         m.save(outfile='templates/timemap.html')
+
+
+
+@app.route('/base')
+def base():
+    return render_template('test_uni_year.html')

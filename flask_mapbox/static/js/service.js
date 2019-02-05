@@ -12,6 +12,9 @@ $(document).ready(function () {
     // console.log(window.location);
     //
     //get values from year, nationality and gender selectbox
+
+    console.log("Ready to work!");
+
     $('#data-selector-form').on('change', function (e) {
 
         console.log("Changed data selector");
@@ -65,6 +68,7 @@ $(document).ready(function () {
                         $('#folium-map').append($new_map);
 
                     });
+                console.log($('input[name=nationality]:checked').val());
                 // e.preventDefault();
                 break;
             }

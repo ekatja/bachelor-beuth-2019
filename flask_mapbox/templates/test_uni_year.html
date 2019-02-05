@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block page_script %}
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+{% endblock %}
+
+{% block map %}
+{% include 'timemap.html' %}
+{% endblock %}
+
+{% block data %}
+    {{ super() }}
+{% endblock%}
+
+{% block gender %}
+{% endblock %}
+
+{% block nationality %}
+{% endblock %}
+
+{% block year %}
+{% endblock %}
+
+{% block state %}
+{% endblock %}
+
+{% block year_slider %}
+<div class="mb-3" id="year-slider"></div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+{% endblock %}

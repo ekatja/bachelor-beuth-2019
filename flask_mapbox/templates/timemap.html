@@ -17,7 +17,7 @@
     
     <meta name="viewport" content="width=device-width,
         initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <style>#map_b0146ac2c2864e5ab0d1bfea7014b6d5 {
+    <style>#map_a802d37448394b6e8bac49c3bfe7f2f6 {
         position: relative;
         width: 100.0%;
         height: 100.0%;
@@ -49,7 +49,7 @@
     <i class="far fa-circle" style ='color: #008837; margin-right: 3px; -webkit-text-stroke: 1px #008837;'></i> Hochschulen eigenen Typs</br></div>
     
     
-    <div class="folium-map" id="map_b0146ac2c2864e5ab0d1bfea7014b6d5" ></div>
+    <div class="folium-map" id="map_a802d37448394b6e8bac49c3bfe7f2f6" ></div>
 </body>
 <script>    
     
@@ -57,8 +57,8 @@
         var bounds = null;
     
 
-    var map_b0146ac2c2864e5ab0d1bfea7014b6d5 = L.map(
-        'map_b0146ac2c2864e5ab0d1bfea7014b6d5', {
+    var map_a802d37448394b6e8bac49c3bfe7f2f6 = L.map(
+        'map_a802d37448394b6e8bac49c3bfe7f2f6', {
         center: [51, 13],
         zoom: 6,
         maxBounds: bounds,
@@ -70,7 +70,7 @@
 
 
     
-    var tile_layer_46310e838ecc40319b1f3cc7db1e464b = L.tileLayer(
+    var tile_layer_2c4be37870a44dc3a2433c0bca9a1a0c = L.tileLayer(
         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         {
         "attribution": null,
@@ -82,7 +82,7 @@
         "opacity": 1,
         "subdomains": "abc",
         "tms": false
-}).addTo(map_b0146ac2c2864e5ab0d1bfea7014b6d5);
+}).addTo(map_a802d37448394b6e8bac49c3bfe7f2f6);
     
             document.addEventListener("DOMContentLoaded", function(event) {
  
@@ -2795,7 +2795,7 @@
                 }
        
                 fill_map = function(){
-                    map = map_b0146ac2c2864e5ab0d1bfea7014b6d5;
+                    map = map_a802d37448394b6e8bac49c3bfe7f2f6;
                     markers = markersDict[current_timestamp];
                     markers.forEach(function(element) {
                         element.addTo(map);
@@ -2810,8 +2810,7 @@
                     }
                 }
                 clear_map = function(){
-                    map = map_b0146ac2c2864e5ab0d1bfea7014b6d5;
-                    //console.log(current_timestamp);
+                    map = map_a802d37448394b6e8bac49c3bfe7f2f6;
                     
                     for (var year in markersDict ){
                         if(year > current_timestamp){
