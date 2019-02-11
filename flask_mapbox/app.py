@@ -4,7 +4,9 @@ from folium import plugins
 import pandas as pd
 import numpy as np
 import geopandas as gpd
-from pprint import pprint
+from bokeh.plotting import figure
+from bokeh.embed import components
+from bokeh.resources import INLINE
 import xlrd
 import requests
 import branca
@@ -175,14 +177,19 @@ def newmap():
 def timemap():
     style_dict = create_unis_dict(unis)
     create_timemap(state_geo, style_dict, False)
-    return render_template('uni-year.html', page_title='Hochschulen nach Gründungsjahr', ds="university-foundation-year")
+
+    js_resources = INLINE.render_js()
+    css_resources = INLINE.render_css()
+    script, div = create_graph(unis_dict=create_unis_dict(unis))
+
+    return render_template('uni-year.html', page_title='Hochschulen nach Gründungsjahr', ds="university-foundation-year",
+                           js=js_resources, css=css_resources, script=script, div=div)
 
 @app.route('/place-of-study/')
 def place_of_study(year='2006/2007', state='Berlin', gender='Insgesamt'):
 
     df_study_place = study_place.loc[(study_place.WS == year) & (study_place.Geschlecht == gender)]
     bins = create_bins(study_place.loc[study_place.Geschlecht == gender][state].min(), study_place.loc[study_place.Geschlecht == gender][state].max(), 7)
-
     create_connected_map(data=df_study_place, column=state, legend='Studienort', bins=bins, gethtml=False)
 
     return render_template('place-of-study.html',
@@ -259,7 +266,11 @@ def create_connected_map(data, column, legend, bins, gethtml):
             CustomArcPath(state_geo['features'][init_index]['geometry']['coordinates'],
                           feature['geometry']['coordinates'],
                           weight=1,
-                          color='red').add_to(m)
+                          color='red',
+                          # pulse_color='green',
+                          # delay=400,
+                          # dash_array=[10, 20]
+                          ).add_to(m)
 
     # Add tooltips to each state
     temp = tooltip_place_of_study_gdf.loc[(tooltip_place_of_study_gdf.WS == data.WS.values[0]) & (tooltip_place_of_study_gdf.Geschlecht == data.Geschlecht.values[0])]
@@ -267,11 +278,11 @@ def create_connected_map(data, column, legend, bins, gethtml):
                    style_function=lambda x: {'fillColor': '#00000000', 'color': '#00000000'},
                    highlight_function=lambda x: {'weight': 2, 'color': 'grey'},
                    tooltip=folium.features.GeoJsonTooltip(fields=['Bundesland_Studienort', str(column)],
-                                                          aliases=['Bundesland', 'Studierende'],
+                                                          aliases=['Bundesland', 'Studierende aus '+ str(column)],
                                                           labels=True,
-                                                          sticky=True)).add_to(m)
+                                                          sticky=False)).add_to(m)
 
-    folium.LayerControl().add_to(m)
+    # folium.LayerControl().add_to(m)
 
     if gethtml:
         print("no html update")
@@ -281,17 +292,6 @@ def create_connected_map(data, column, legend, bins, gethtml):
         m.save(outfile='templates/map-place-of-study.html')
 
 
-@app.route('/test-arcpath')
-def create_test():
-    m = folium.Map(location=[52, 13], tiles="Openstreetmap", zoom_start=6)
-
-
-    for feature in state_geo['features']:
-        if feature['properties']['NAME_1'] != 'Berlin':
-            CustomArcPath(state_geo['features'][2]['geometry']['coordinates'], feature['geometry']['coordinates']).add_to(m)
-
-
-    return m.get_root().render()
 
 # Create choropleth
 def create_choropleth(geo_data, data, columns, legend, bins, gethtml):
@@ -313,7 +313,7 @@ def create_choropleth(geo_data, data, columns, legend, bins, gethtml):
     ).add_to(m)
 
     #Add tooltips to each state
-    print(data)
+    # print(data)
     temp = tooltip_gdf[tooltip_gdf.Semester == data.Semester.values[0]]
     folium.GeoJson(temp,
                    style_function=lambda x: {'fillColor': '#00000000', 'color': '#00000000'},
@@ -324,6 +324,7 @@ def create_choropleth(geo_data, data, columns, legend, bins, gethtml):
                                                    sticky=True)).add_to(m)
 
     folium.LayerControl().add_to(m)
+
     if gethtml:
         print("no html update")
         return m.get_root().render()
@@ -401,30 +402,6 @@ def create_timemap(geo_data, style_dict, gethtml=False):
     )
     g.add_to(m)
 
-    #Create legend
-    legend_html = '''
-    <div style ='position: fixed;
-    bottom: 30px;
-    right: 27%;
-    width: 220px;
-    height: 120px;
-    background-color: white;
-    //border: 1px solid grey;
-    z-index: 9999;
-    font-size: 12px;
-    padding: 10px 5px 5px 10px;
-    -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);
-    -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);
-    box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);'>
-    <p><b>Legende</b> </p>
-    <i class="far fa-circle" style ='color: #d7191c; margin-right: 3px; -webkit-text-stroke: 1px #d7191c;'></i> Universität </br>
-    <i class="far fa-circle" style ='color: #fdae61; margin-right: 3px; -webkit-text-stroke: 1px #fdae61;'></i> Fachhochschulen / HAW</br>
-    <i class="far fa-circle" style ='color: #5e3c99; margin-right: 3px; -webkit-text-stroke: 1px #5e3c99;'></i> Kunst- und Musikhochschulen</br>
-    <i class="far fa-circle" style ='color: #008837; margin-right: 3px; -webkit-text-stroke: 1px #008837;'></i> Hochschulen eigenen Typs</br></div>
-    '''
-
-    m.get_root().html.add_child(folium.Element(legend_html))
-
     if gethtml:
         print("no html update")
         return m.get_root().render()
@@ -433,7 +410,40 @@ def create_timemap(geo_data, style_dict, gethtml=False):
         m.save(outfile='templates/timemap.html')
 
 
+def create_graph(unis_dict):
 
-@app.route('/base')
-def base():
-    return render_template('uni-year.html')
+    f = {}
+    for k in unis_dict.keys():
+        f[k] = len(unis_dict.get(k))
+
+    s = []
+    for i, item in enumerate(sorted(f.items())):
+        if i == 0:
+            s.append(item[1])
+        else:
+            s.append(s[i - 1] + item[1])
+
+    # Data for plotting
+    plot = figure(plot_height=300, sizing_mode='scale_width')
+
+    x = sorted(unis_dict.keys())
+    y = s
+    print(x, y)
+
+    plot.line(x, y, line_width=4)
+
+    script, div = components(plot)
+    return script, div
+
+# @app.route('/graph/')
+# def show_graph():
+#     # plots=[]
+#     # plots.append(create_graph(unis_dict=create_unis_dict(unis)))
+#     # grab the static resources
+#     js_resources = INLINE.render_js()
+#     css_resources = INLINE.render_css()
+#
+#     script, div = create_graph(unis_dict=create_unis_dict(unis))
+#
+#
+#     return render_template('graph.html', js=js_resources, css=css_resources, script=script, div=div)

@@ -2,10 +2,32 @@
 
 {% block page_script %}
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+    <!-- Bokeh includes-->
+    {{ js | safe }}
+    {{ css | safe }}
 {% endblock %}
 
 {% block map %}
 {% include 'timemap.html' %}
+<div style ='position: fixed;
+    bottom: 30px;
+    right: 27%;
+    width: 220px;
+    height: 120px;
+    background-color: white;
+    //border: 1px solid grey;
+    z-index: 9999;
+    font-size: 12px;
+    padding: 10px 5px 5px 10px;
+    -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);
+    -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);
+    box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);'>
+    <p><b>Legende</b></p>
+    <i class="far fa-circle" style ='color: #d7191c; margin-right: 3px; -webkit-text-stroke: 1px #d7191c;'></i> Universität </br>
+    <i class="far fa-circle" style ='color: #fdae61; margin-right: 3px; -webkit-text-stroke: 1px #fdae61;'></i> Fachhochschulen / HAW</br>
+    <i class="far fa-circle" style ='color: #5e3c99; margin-right: 3px; -webkit-text-stroke: 1px #5e3c99;'></i> Kunst- und Musikhochschulen</br>
+    <i class="far fa-circle" style ='color: #008837; margin-right: 3px; -webkit-text-stroke: 1px #008837;'></i> Hochschulen eigenen Typs</br>
+</div>
 {% endblock %}
 
 {% block data %}
@@ -26,6 +48,11 @@
 
 {% block year_slider %}
 <div class="mb-3" id="year-slider"></div>
+{% endblock %}
+
+{% block graph %}
+    {{ script | safe }}
+    {{ div | safe }}
 {% endblock %}
 
 {% block scripts %}

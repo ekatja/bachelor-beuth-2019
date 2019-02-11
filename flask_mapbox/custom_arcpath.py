@@ -57,12 +57,13 @@ class CustomArcPath(Marker):
             }
             from_poly.remove();
             to_poly.remove();
-                {{this.get_name()}} = L.Polyline.Arc(
+                
+                {{this.get_name()}} = L.polyline(L.Polyline.Arc(
                   [from.lng, from.lat],
                   [to.lng, to.lat],
-                  {{ this.options }}
-                )
-                .addTo({{this._parent.get_name()}});
+                  
+                )._latlngs, {{ this.options }})
+                .addTo({{this._parent.get_name()}}).snakeIn();
             {% endmacro %}
             """)  # noqa
 
@@ -88,11 +89,11 @@ class CustomArcPath(Marker):
             # 'hardwareAcceleration': kwargs.pop('hardware_acceleration', False),
             # 'delay': kwargs.pop('delay', 400),
             # 'dashArray': kwargs.pop('dash_array', [10, 20]),
-            'vertices': kwargs.pop('vertices', 200),
+            'vertices': kwargs.pop('vertices', 100),
             'offset': kwargs.pop('offset', 10),
-            # 'weight': kwargs.pop('weight', 5),
+            'weight': kwargs.pop('weight', 5),
             # 'opacity': kwargs.pop('opacity', 0.5),
-            # 'color': kwargs.pop('color', '#0000FF'),
+            'color': kwargs.pop('color', 'red'),
             # 'pulseColor': kwargs.pop('pulse_color', '#FFFFFF'),
         })
         self.options = json.dumps(options, sort_keys=True, indent=2)
@@ -104,12 +105,12 @@ class CustomArcPath(Marker):
         assert isinstance(figure, Figure), ('You cannot render this Element '
                                             'if it is not in a Figure.')
 
-        # figure.header.add_child(
-        #     JavascriptLink('https://cdn.jsdelivr.net/npm/leaflet-ant-path@1.1.2/dist/leaflet-ant-path.min.js'),  # noqa
-        #     name='antpath',
-        # )
         figure.header.add_child(
             # JavascriptLink('https://unpkg.com/leaflet-arc/bin/leaflet-arc.min.js'),  # noqa
             JavascriptLink('/static/js/leaflet-arc.min.js'),
             name='arcpath',
+        )
+        figure.header.add_child(
+            JavascriptLink('/static/js/L.Polyline.SnakeAnim.js'),  # noqa
+            name='antpath',
         )

@@ -17,7 +17,7 @@
     
     <meta name="viewport" content="width=device-width,
         initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <style>#map_a802d37448394b6e8bac49c3bfe7f2f6 {
+    <style>#map_86fc934bf42f49afa9853a04f2661914 {
         position: relative;
         width: 100.0%;
         height: 100.0%;
@@ -29,27 +29,7 @@
 </head>
 <body>    
     
-    <div style ='position: fixed;
-    bottom: 30px;
-    right: 27%;
-    width: 220px;
-    height: 120px;
-    background-color: white;
-    //border: 1px solid grey;
-    z-index: 9999;
-    font-size: 12px;
-    padding: 10px 5px 5px 10px;
-    -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);
-    -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);
-    box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);'>
-    <p><b>Legende</b> </p>
-    <i class="far fa-circle" style ='color: #d7191c; margin-right: 3px; -webkit-text-stroke: 1px #d7191c;'></i> Universität </br>
-    <i class="far fa-circle" style ='color: #fdae61; margin-right: 3px; -webkit-text-stroke: 1px #fdae61;'></i> Fachhochschulen / HAW</br>
-    <i class="far fa-circle" style ='color: #5e3c99; margin-right: 3px; -webkit-text-stroke: 1px #5e3c99;'></i> Kunst- und Musikhochschulen</br>
-    <i class="far fa-circle" style ='color: #008837; margin-right: 3px; -webkit-text-stroke: 1px #008837;'></i> Hochschulen eigenen Typs</br></div>
-    
-    
-    <div class="folium-map" id="map_a802d37448394b6e8bac49c3bfe7f2f6" ></div>
+    <div class="folium-map" id="map_86fc934bf42f49afa9853a04f2661914" ></div>
 </body>
 <script>    
     
@@ -57,8 +37,8 @@
         var bounds = null;
     
 
-    var map_a802d37448394b6e8bac49c3bfe7f2f6 = L.map(
-        'map_a802d37448394b6e8bac49c3bfe7f2f6', {
+    var map_86fc934bf42f49afa9853a04f2661914 = L.map(
+        'map_86fc934bf42f49afa9853a04f2661914', {
         center: [51, 13],
         zoom: 6,
         maxBounds: bounds,
@@ -70,7 +50,7 @@
 
 
     
-    var tile_layer_2c4be37870a44dc3a2433c0bca9a1a0c = L.tileLayer(
+    var tile_layer_c313c7c476944295b57a0191b4f428d3 = L.tileLayer(
         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         {
         "attribution": null,
@@ -82,7 +62,7 @@
         "opacity": 1,
         "subdomains": "abc",
         "tms": false
-}).addTo(map_a802d37448394b6e8bac49c3bfe7f2f6);
+}).addTo(map_86fc934bf42f49afa9853a04f2661914);
     
             document.addEventListener("DOMContentLoaded", function(event) {
  
@@ -2795,7 +2775,7 @@
                 }
        
                 fill_map = function(){
-                    map = map_a802d37448394b6e8bac49c3bfe7f2f6;
+                    map = map_86fc934bf42f49afa9853a04f2661914;
                     markers = markersDict[current_timestamp];
                     markers.forEach(function(element) {
                         element.addTo(map);
@@ -2810,7 +2790,7 @@
                     }
                 }
                 clear_map = function(){
-                    map = map_a802d37448394b6e8bac49c3bfe7f2f6;
+                    map = map_86fc934bf42f49afa9853a04f2661914;
                     
                     for (var year in markersDict ){
                         if(year > current_timestamp){

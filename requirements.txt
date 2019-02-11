@@ -11,3 +11,4 @@ Werkzeug
 pandas
 numpy
 branca
+bokeh

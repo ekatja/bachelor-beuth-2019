@@ -1,6 +1,21 @@
 {% extends 'base.html' %}
 
 {% block map %}
+
+<div style ='position: absolute;
+                top: 5px;
+                right: 25px;
+                width: 450px;
+                height: 48px;
+                background-color: white;
+                opacity: 0.8;
+                //border: 1px solid grey;
+                z-index: 500;
+                font-size: 12px;
+                padding: 10px 5px 5px 10px;
+                -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);
+                -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);
+                box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);'></div>
     {% include 'map.html' %}
 {% endblock %}
 
