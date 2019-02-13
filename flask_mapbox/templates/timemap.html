@@ -17,7 +17,7 @@
     
     <meta name="viewport" content="width=device-width,
         initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <style>#map_86fc934bf42f49afa9853a04f2661914 {
+    <style>#map_bf29402e47d3419c8716af028892334a {
         position: relative;
         width: 100.0%;
         height: 100.0%;
@@ -29,7 +29,7 @@
 </head>
 <body>    
     
-    <div class="folium-map" id="map_86fc934bf42f49afa9853a04f2661914" ></div>
+    <div class="folium-map" id="map_bf29402e47d3419c8716af028892334a" ></div>
 </body>
 <script>    
     
@@ -37,8 +37,8 @@
         var bounds = null;
     
 
-    var map_86fc934bf42f49afa9853a04f2661914 = L.map(
-        'map_86fc934bf42f49afa9853a04f2661914', {
+    var map_bf29402e47d3419c8716af028892334a = L.map(
+        'map_bf29402e47d3419c8716af028892334a', {
         center: [51, 13],
         zoom: 6,
         maxBounds: bounds,
@@ -50,7 +50,7 @@
 
 
     
-    var tile_layer_c313c7c476944295b57a0191b4f428d3 = L.tileLayer(
+    var tile_layer_cd19d1dd87d84ed693cde0cb910316a5 = L.tileLayer(
         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         {
         "attribution": null,
@@ -62,7 +62,7 @@
         "opacity": 1,
         "subdomains": "abc",
         "tms": false
-}).addTo(map_86fc934bf42f49afa9853a04f2661914);
+}).addTo(map_bf29402e47d3419c8716af028892334a);
     
             document.addEventListener("DOMContentLoaded", function(event) {
  
@@ -2735,14 +2735,14 @@
                 
                 let markersDict = {};
                 let markers;
-                console.log('hi');
+                
                 //console.log(d3.select("#year-slider"));
                 // insert time slider
                 d3.select("#year-slider").insert("p", ":first-child").append("input")
                     .attr("type", "range")
-                    .attr("width", "100px")
-                    .attr("min", 0)
-                    .attr("max", timestamps.length - 1)
+                    //.attr("width", "100px")
+                    //.attr("min", 1386)
+                    //.attr("max", timestamps.length - 1)
                     .attr("value", 0)
                     .attr("id", "slider")
                     .attr("step", "1")
@@ -2775,7 +2775,7 @@
                 }
        
                 fill_map = function(){
-                    map = map_86fc934bf42f49afa9853a04f2661914;
+                    map = map_bf29402e47d3419c8716af028892334a;
                     markers = markersDict[current_timestamp];
                     markers.forEach(function(element) {
                         element.addTo(map);
@@ -2790,7 +2790,7 @@
                     }
                 }
                 clear_map = function(){
-                    map = map_86fc934bf42f49afa9853a04f2661914;
+                    map = map_bf29402e47d3419c8716af028892334a;
                     
                     for (var year in markersDict ){
                         if(year > current_timestamp){

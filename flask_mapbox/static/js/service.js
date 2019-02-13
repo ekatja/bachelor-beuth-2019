@@ -60,7 +60,7 @@ $(document).ready(function () {
                     url: '/mapupdate/'
                 })
                     .done(function (data, statusText, xhr) {
-
+                        console.log|(data);
                         let $map = $('#folium-map').contents().clone();
                         let $new_map = $(data);
                         //TODO: Optimize map include
@@ -69,7 +69,6 @@ $(document).ready(function () {
 
                     });
                 console.log($('input[name=nationality]:checked').val());
-                // e.preventDefault();
                 break;
             }
             case '/university-foundation-year/': {
@@ -77,26 +76,18 @@ $(document).ready(function () {
                 $.ajax({
                     data: {
                         dataframe: $('#data-selector').val(),
-                        // year: $('#year-selector').val(),
+                        // year: $('output#slider-value').val(),
                         // nationality: $('input[name=nationality]:checked').val(),
                         // gender: $("input[name=gender]:checked").val()
                     },
                     type: 'POST',
                     url: '/mapupdate/'
+                    // url: '/update-university-foundation-year/'
                 })
                     .done(function (data) {
-                        // $('#data-selector option[value="university-foundation-year"]').prop('selected', true);
-
-                        // let $map = $('#folium-map').contents().clone();
-                        // let $new_map = $(data);
                         // //TODO: Optimize map include
-                        // $('#folium-map').empty();
-                        // $('#folium-map').append($new_map);
-
                     });
                 break;
-                // e.preventDefault();
-
             }
             case '/place-of-study/':{
                 console.log('case: options by place-of-study');
@@ -112,21 +103,33 @@ $(document).ready(function () {
                     url: '/study-place-mapupdate/'
                 })
                     .done(function (data) {
-
-                        // $('#data-selector option[value="place-of-study"]').prop('selected', true);
-                        // $('#state-selector option[value=data.state]').prop('selected', true);
                         let $map = $('#folium-map').contents().clone();
                         let $new_map = $(data);
                         //TODO: Optimize map include
                         $('#folium-map').empty();
                         $('#folium-map').append($new_map);
-
                     });
                 break;
             }
             e.preventDefault();
         }
+    });
 
+    $('#year-slider').on('change', function (e) {
+
+        $.ajax({
+            data: {
+                dataframe: $('#data-selector').val(),
+                year: $('output#slider-value').val(),
+            },
+            type: 'POST',
+            url: '/update-university-foundation-year/'
+        })
+            .done(function (data) {
+
+            });
+
+        e.preventDefault();
     });
 
 });

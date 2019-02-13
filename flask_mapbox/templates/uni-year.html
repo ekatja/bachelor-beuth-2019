@@ -47,12 +47,20 @@
 {% endblock %}
 
 {% block year_slider %}
-<div class="mb-3" id="year-slider"></div>
+<div class="mb-0" id="year-slider"></div>
+<div class="d-flex justify-content-between" style="margin-top: -10px;">
+    <span>1386</span>
+    <span>2017</span>
+</div>
+
 {% endblock %}
 
 {% block graph %}
+<div class="mb-3" id="graph">
     {{ script | safe }}
-    {{ div | safe }}
+   {{ div | safe }}
+
+</div>
 {% endblock %}
 
 {% block scripts %}

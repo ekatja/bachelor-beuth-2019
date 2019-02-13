@@ -6,6 +6,25 @@ html, body {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 12px;
     }
+
+#custom-header {
+    margin: 15px 0 0;
+    padding: 0;
+}
+#custom-header > h1{
+    font-size: 28px;
+    margin-top: 10px;
+}
+#main-content {
+    height: calc(100% - 60px);
+}
+#options-bar > h2 {
+    font-size: 24px;
+}
+#graph {
+    position: absolute;
+    bottom: 1rem;
+}
 /*#options-bar {*/
     /*-webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);*/
     /*-moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);*/

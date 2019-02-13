@@ -50,14 +50,14 @@ class TimeSliderMarker(GeoJson):
                 
                 let markersDict = {};
                 let markers;
-                console.log('hi');
+                
                 //console.log(d3.select("#year-slider"));
                 // insert time slider
                 d3.select("#year-slider").insert("p", ":first-child").append("input")
                     .attr("type", "range")
-                    .attr("width", "100px")
-                    .attr("min", 0)
-                    .attr("max", timestamps.length - 1)
+                    //.attr("width", "100px")
+                    //.attr("min", 1386)
+                    //.attr("max", timestamps.length - 1)
                     .attr("value", 0)
                     .attr("id", "slider")
                     .attr("step", "1")

@@ -14,13 +14,18 @@
 </head>
 <body>
 <div class="container-fluid h-100">
-    <div class="row justify-content-end h-100">
-        <div class="col-md-9 pr-0 h-100" id="folium-map">
+
+        <div class="page-header" id="custom-header">
+          <h1>{{ page_title }} <small>Wintersemester {{ year }}</small></h1>
+        </div>
+
+        <div class="row justify-content-end" id="main-content">
+        <div class="col-md-9 pr-0 " id="folium-map">
             {% block map %}
             {% endblock %}
 
         </div>
-        <div class="col-md-3 h-100 pr-5 pl-5 " id="options-bar">
+        <div class="col-md-3 pr-5 pl-5 " id="options-bar">
             <h2 class="mb-3">Studierende in Deutschland</h2>
 
             <form id="data-selector-form">
@@ -116,6 +121,7 @@
             {% endblock %}
 
         </div>
+
     </div>
 </div>
 

@@ -7,15 +7,15 @@ import geopandas as gpd
 from bokeh.plotting import figure
 from bokeh.embed import components
 from bokeh.resources import INLINE
+from bokeh.models.sources import AjaxDataSource
 import xlrd
 import requests
 import branca
 from geojson import Point, Feature
 import fiona.crs
-# import geojson
+
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash, jsonify
 from . import TimeSliderMarker
-# from custom_polyline import CustomPolyLine
 from . import CustomArcPath
 
 from jinja2 import Template
@@ -105,7 +105,7 @@ def map(year='1998/99'):
                       bins=bins,
                       gethtml=False)
 
-    return render_template('students-state.html', selected_year=year, years=YEARS, page_title='Studierende nach Bundesländer', ds="st_bd")
+    return render_template('students-state.html', year=year, years=YEARS, page_title='Studierende nach Bundesländer', ds="st_bd")
 
 
 @app.route('/mapupdate/', methods=['POST'])
@@ -147,6 +147,7 @@ def students_state_mapupdate(dataframe='st_bd', year="2016/17", nationality='Ins
                                 bins=bins,
                                 gethtml=True)
         return map
+
     else:
         return redirect('/university-foundation-year')
 
@@ -180,10 +181,41 @@ def timemap():
 
     js_resources = INLINE.render_js()
     css_resources = INLINE.render_css()
-    script, div = create_graph(unis_dict=create_unis_dict(unis))
+    script, div = create_graph(unis_dict=style_dict)
+
+    # ajax_script, ajax_div = \
+    make_ajax_plot(unis_dict=style_dict)
+
+    scripts = []
+    divs = []
+    scripts.append(script)
+    divs.append(div)
+    # scripts.append(ajax_script)
+    # divs.append(ajax_div)
+
 
     return render_template('uni-year.html', page_title='Hochschulen nach Gründungsjahr', ds="university-foundation-year",
-                           js=js_resources, css=css_resources, script=script, div=div)
+                           js=js_resources, css=css_resources,
+                           script=script, div=div)
+
+@app.route('/update-university-foundation-year/', methods=['POST'])
+def university_foundation_year_update():
+
+    print("Got request", request.form)
+
+    if request.form['dataframe']:
+        print("dataframe from form", request.form['dataframe'])
+        dataframe = request.form['dataframe']
+
+    if request.form['year']:
+        print("year from form", request.form['year'])
+        year = request.form['year']
+
+
+    # make_ajax_plot(unis_dict=create_unis_dict(unis))
+    return jsonify(year=year)
+
+
 
 @app.route('/place-of-study/')
 def place_of_study(year='2006/2007', state='Berlin', gender='Insgesamt'):
@@ -424,26 +456,60 @@ def create_graph(unis_dict):
             s.append(s[i - 1] + item[1])
 
     # Data for plotting
-    plot = figure(plot_height=300, sizing_mode='scale_width')
-
     x = sorted(unis_dict.keys())
     y = s
-    print(x, y)
+    TOOLTIPS = [
+    ("Jahr", "$x{0}"),
+    ("Anzahl", "$y{0}"),
+    ]
+    plot = figure(plot_height=400, sizing_mode='scale_width',
+                  toolbar_location=None,
+                  tooltips=TOOLTIPS,
+                  x_range=(1386, 2017),
+                  title='Hochschulen nach Gründungsjahr'
+                  )
 
-    plot.line(x, y, line_width=4)
+    # print(x)
+
+    plot.line(x, y, line_width=3)
+    # plot.toolbar.autohide = True
+    plot.title.align='center'
+    plot.xaxis.axis_label = "Jahr"
+    plot.yaxis.axis_label = "Anzahl"
+    plot.axis.axis_label_text_font_style = 'normal'
 
     script, div = components(plot)
     return script, div
 
-# @app.route('/graph/')
-# def show_graph():
-#     # plots=[]
-#     # plots.append(create_graph(unis_dict=create_unis_dict(unis)))
-#     # grab the static resources
-#     js_resources = INLINE.render_js()
-#     css_resources = INLINE.render_css()
-#
-#     script, div = create_graph(unis_dict=create_unis_dict(unis))
-#
-#
-#     return render_template('graph.html', js=js_resources, css=css_resources, script=script, div=div)
+
+def make_ajax_plot(unis_dict):
+    f = {}
+    for k in unis_dict.keys():
+        f[k] = len(unis_dict.get(k))
+
+    s = []
+    for i, item in enumerate(sorted(f.items())):
+        if i == 0:
+            s.append(item[1])
+        else:
+            s.append(s[i - 1] + item[1])
+
+    print(request.url_root)
+    source = AjaxDataSource(data_url=request.url_root + '/update-university-foundation-year/',
+                             mode='append')
+
+    x = sorted(unis_dict.keys())
+    y = s
+
+    source.data = dict(year=[])
+    print('make ajax plot ', source.data)
+    # TOOLTIPS = [
+    #     ("Jahr", "$x{0}"),
+    #     ("Anzahl", "$y{0}"),
+    # ]
+    # plot = figure(plot_height=400, sizing_mode='scale_width', toolbar_location=None, tooltips=TOOLTIPS,
+    #               x_range=(1386, 2017))
+    # plot.line('x', 'y', source=source, line_width=3)
+    #
+    # script, div = components(plot)
+    # return script, div
