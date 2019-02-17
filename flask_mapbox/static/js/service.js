@@ -60,11 +60,13 @@ $(document).ready(function () {
                     url: '/mapupdate/'
                 })
                     .done(function (data, statusText, xhr) {
-                        console.log|(data);
+
+                        $('#ws').text("Wintersemester "+data.year);
                         let $map = $('#folium-map').contents().clone();
-                        let $new_map = $(data);
+                        let $new_map = $(data.map);
                         //TODO: Optimize map include
                         $('#folium-map').empty();
+                        $('#folium-map').append('<div id = \'legend-bg\'></div>');
                         $('#folium-map').append($new_map);
 
                     });
@@ -103,10 +105,12 @@ $(document).ready(function () {
                     url: '/study-place-mapupdate/'
                 })
                     .done(function (data) {
+                        $('#ws').text("Wintersemester "+data.year);
                         let $map = $('#folium-map').contents().clone();
-                        let $new_map = $(data);
+                        let $new_map = $(data.map);
                         //TODO: Optimize map include
                         $('#folium-map').empty();
+                        $('#folium-map').append('<div id = \'legend-bg\'></div>');
                         $('#folium-map').append($new_map);
                     });
                 break;
@@ -115,7 +119,19 @@ $(document).ready(function () {
         }
     });
 
-    $('#year-slider').on('change', function (e) {
+    $('#year-slider').on('input', function (e) {
+
+        $.ajax({
+            type: 'GET',
+            url: '/bokeh_data/'+$('output#slider-value').val()
+        })
+            .done(function (data) {
+
+                var ds = Bokeh.documents[0].get_model_by_name('students');
+                console.log(ds);
+                ds.data = data.data;
+                ds.change.emit();
+            });
 
         $.ajax({
             data: {
@@ -130,6 +146,8 @@ $(document).ready(function () {
             });
 
         e.preventDefault();
+
+
     });
 
 });

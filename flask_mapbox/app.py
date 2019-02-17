@@ -4,10 +4,12 @@ from folium import plugins
 import pandas as pd
 import numpy as np
 import geopandas as gpd
-from bokeh.plotting import figure
+from bokeh.plotting import figure, Figure
 from bokeh.embed import components
 from bokeh.resources import INLINE
+from bokeh.models import ColumnDataSource
 from bokeh.models.sources import AjaxDataSource
+from bokeh.models.callbacks import CustomJS
 import xlrd
 import requests
 import branca
@@ -146,7 +148,7 @@ def students_state_mapupdate(dataframe='st_bd', year="2016/17", nationality='Ins
                                 legend='Studentenanzahl',
                                 bins=bins,
                                 gethtml=True)
-        return map
+        return jsonify({'map': map, 'year': year})
 
     else:
         return redirect('/university-foundation-year')
@@ -174,29 +176,21 @@ def newmap():
 
 
 # TimeSliderChoroplet
-@app.route('/university-foundation-year/')
-def timemap():
+@app.route('/university-foundation-year/', methods=['GET'])
+def timemap(year=1386):
+
     style_dict = create_unis_dict(unis)
+    # print('HOHOHOHO',style_dict.get(year))
     create_timemap(state_geo, style_dict, False)
 
     js_resources = INLINE.render_js()
     css_resources = INLINE.render_css()
-    script, div = create_graph(unis_dict=style_dict)
-
-    # ajax_script, ajax_div = \
-    make_ajax_plot(unis_dict=style_dict)
-
-    scripts = []
-    divs = []
-    scripts.append(script)
-    divs.append(div)
-    # scripts.append(ajax_script)
-    # divs.append(ajax_div)
-
+    plot, script, div = create_graph(unis_dict=style_dict, year=year)
 
     return render_template('uni-year.html', page_title='Hochschulen nach Gründungsjahr', ds="university-foundation-year",
                            js=js_resources, css=css_resources,
                            script=script, div=div)
+
 
 @app.route('/update-university-foundation-year/', methods=['POST'])
 def university_foundation_year_update():
@@ -225,7 +219,7 @@ def place_of_study(year='2006/2007', state='Berlin', gender='Insgesamt'):
     create_connected_map(data=df_study_place, column=state, legend='Studienort', bins=bins, gethtml=False)
 
     return render_template('place-of-study.html',
-                           selected_year=year,
+                           year=year,
                            selected_state = state,
                            states = STATES,
                            years = YEARS_STUDY_PLACE,
@@ -264,7 +258,7 @@ def study_place_mapupdate(dataframe='place-of-study', year="2017/2018", gender='
         map = create_connected_map(data=study_place_year, column=column,
                                 legend='Studienort', bins=bins,
                                 gethtml=True)
-        return map
+        return jsonify({'map':map, 'year':year})
     else:
         return redirect('/place-of-study')
 
@@ -355,7 +349,7 @@ def create_choropleth(geo_data, data, columns, legend, bins, gethtml):
                                                    labels=True,
                                                    sticky=True)).add_to(m)
 
-    folium.LayerControl().add_to(m)
+    # folium.LayerControl().add_to(m)
 
     if gethtml:
         print("no html update")
@@ -442,11 +436,71 @@ def create_timemap(geo_data, style_dict, gethtml=False):
         m.save(outfile='templates/timemap.html')
 
 
-def create_graph(unis_dict):
+def create_graph(unis_dict, year=None):
+
+    if year is not None:
+
+        x = [year]
+        y = [len(unis_dict.get(year))]
+
+    else:
+        f = {}
+        for k in unis_dict.keys():
+            f[k] = len(unis_dict.get(k))
+
+        s = []
+        for i, item in enumerate(sorted(f.items())):
+            if i == 0:
+                s.append(item[1])
+            else:
+                s.append(s[i - 1] + item[1])
+
+        # Data for plotting
+        x = sorted(unis_dict.keys())
+        y = s
+
+    TOOLTIPS = [
+    ("Jahr", "$x{0}"),
+    ("Anzahl", "$y{0}"),
+    ]
+    source = ColumnDataSource(data=dict(year=x, quantity=y), name='students')
+
+    plot = figure(plot_height=400, sizing_mode='scale_width',
+                  toolbar_location=None,
+                  tooltips=TOOLTIPS,
+                  x_range=(1386, 2017),
+                  y_range=(0,400),
+                  title='Anzahl der Hochschulen'
+                  )
+
+    if year is not None:
+        plot.circle(x='year',y='quantity', size=5, source=source)
+    else:
+        plot.line(x='year',y='quantity',source=source,line_width=3)
+
+    # plot.vbar(x='year', top='quantity', width=0.9, source=source, line_color='white')
+    # plot.toolbar.autohide = True
+    plot.title.align='center'
+    plot.xaxis.axis_label = "Jahr"
+    plot.yaxis.axis_label = "Anzahl"
+    plot.axis.axis_label_text_font_style = 'normal'
+
+    script, div = components(plot)
+    return plot, script, div
+
+
+@app.route('/bokeh_data/<int:year>', methods=['GET'])
+def get_bokeh_data(year):
+    style_dict = create_unis_dict(unis)
+    data = {}
+    for i,(k,v) in enumerate(style_dict.items()):
+        if k <= year:
+            # print(style_dict[k])
+            data[k]=style_dict[k]
 
     f = {}
-    for k in unis_dict.keys():
-        f[k] = len(unis_dict.get(k))
+    for k in data.keys():
+        f[k] = len(data.get(k))
 
     s = []
     for i, item in enumerate(sorted(f.items())):
@@ -456,30 +510,11 @@ def create_graph(unis_dict):
             s.append(s[i - 1] + item[1])
 
     # Data for plotting
-    x = sorted(unis_dict.keys())
+    x = sorted(data.keys())
     y = s
-    TOOLTIPS = [
-    ("Jahr", "$x{0}"),
-    ("Anzahl", "$y{0}"),
-    ]
-    plot = figure(plot_height=400, sizing_mode='scale_width',
-                  toolbar_location=None,
-                  tooltips=TOOLTIPS,
-                  x_range=(1386, 2017),
-                  title='Hochschulen nach Gründungsjahr'
-                  )
+    source = ColumnDataSource(data=dict(year=x, quantity=y))
+    return jsonify(source.to_json(include_defaults=True))
 
-    # print(x)
-
-    plot.line(x, y, line_width=3)
-    # plot.toolbar.autohide = True
-    plot.title.align='center'
-    plot.xaxis.axis_label = "Jahr"
-    plot.yaxis.axis_label = "Anzahl"
-    plot.axis.axis_label_text_font_style = 'normal'
-
-    script, div = components(plot)
-    return script, div
 
 
 def make_ajax_plot(unis_dict):
