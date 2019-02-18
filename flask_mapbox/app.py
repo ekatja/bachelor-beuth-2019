@@ -107,7 +107,7 @@ def map(year='1998/99'):
                       bins=bins,
                       gethtml=False)
 
-    return render_template('students-state.html', year=year, years=YEARS, page_title='Studierende nach Bundesländer', ds="st_bd")
+    return render_template('students-state.html', year='Wintersemester'+' '+year, years=YEARS, gender='', page_title='Studierende nach Bundesländer', ds="st_bd")
 
 
 @app.route('/mapupdate/', methods=['POST'])
@@ -148,7 +148,7 @@ def students_state_mapupdate(dataframe='st_bd', year="2016/17", nationality='Ins
                                 legend='Studentenanzahl',
                                 bins=bins,
                                 gethtml=True)
-        return jsonify({'map': map, 'year': year})
+        return jsonify({'map': map, 'year': year, 'nationality': nationality, 'gender':gender})
 
     else:
         return redirect('/university-foundation-year')
@@ -219,11 +219,11 @@ def place_of_study(year='2006/2007', state='Berlin', gender='Insgesamt'):
     create_connected_map(data=df_study_place, column=state, legend='Studienort', bins=bins, gethtml=False)
 
     return render_template('place-of-study.html',
-                           year=year,
+                           year='Wintersemester'+' '+year,
                            selected_state = state,
                            states = STATES,
                            years = YEARS_STUDY_PLACE,
-                           page_title='Studienort vs. Land des Erwerbs der Hochschulzugangsberechtigung', ds="place-of-study")
+                           page_title='Studienort vs. Land des Erwerbs der HZB', ds="place-of-study")
 
 @app.route('/study-place-mapupdate/', methods=['POST'])
 def study_place_mapupdate(dataframe='place-of-study', year="2017/2018", gender='Insgesamt', state='Berlin'):
@@ -258,7 +258,7 @@ def study_place_mapupdate(dataframe='place-of-study', year="2017/2018", gender='
         map = create_connected_map(data=study_place_year, column=column,
                                 legend='Studienort', bins=bins,
                                 gethtml=True)
-        return jsonify({'map':map, 'year':year})
+        return jsonify({'map':map, 'year':year, 'gender': gender, 'state':state })
     else:
         return redirect('/place-of-study')
 
@@ -440,8 +440,8 @@ def create_graph(unis_dict, year=None):
 
     if year is not None:
 
-        x = [year]
-        y = [len(unis_dict.get(year))]
+        x = [year-1, year]
+        y = [0, len(unis_dict.get(year))]
 
     else:
         f = {}
@@ -466,17 +466,19 @@ def create_graph(unis_dict, year=None):
     source = ColumnDataSource(data=dict(year=x, quantity=y), name='students')
 
     plot = figure(plot_height=400, sizing_mode='scale_width',
-                  toolbar_location=None,
+                  toolbar_location='below',
+                  tools='hover, xwheel_zoom, xpan',
                   tooltips=TOOLTIPS,
                   x_range=(1386, 2017),
                   y_range=(0,400),
                   title='Anzahl der Hochschulen'
                   )
 
-    if year is not None:
-        plot.circle(x='year',y='quantity', size=5, source=source)
-    else:
-        plot.line(x='year',y='quantity',source=source,line_width=3)
+    # if year is not None:
+    #     # plot.circle(x='year',y='quantity', size=5, source=source)
+    #     plot.vbar(x='year', top='quantity', width=0.9, source=source, line_color='white')
+    # else:
+    plot.line(x='year',y='quantity',source=source,line_width=3)
 
     # plot.vbar(x='year', top='quantity', width=0.9, source=source, line_color='white')
     # plot.toolbar.autohide = True

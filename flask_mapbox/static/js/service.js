@@ -48,7 +48,7 @@ $(document).ready(function () {
 
         switch(window.location.pathname){
             case '/map/': {
-                console.log('case: options by map')
+                console.log('case: options by map');
                 $.ajax({
                     data: {
                         dataframe: $('#data-selector').val(),
@@ -60,8 +60,8 @@ $(document).ready(function () {
                     url: '/mapupdate/'
                 })
                     .done(function (data, statusText, xhr) {
-
-                        $('#ws').text("Wintersemester "+data.year);
+                        // console.log(data);
+                        $('#ws').text("Wintersemester "+data.year+', '+data.nationality+', '+data.gender);
                         let $map = $('#folium-map').contents().clone();
                         let $new_map = $(data.map);
                         //TODO: Optimize map include
@@ -105,7 +105,7 @@ $(document).ready(function () {
                     url: '/study-place-mapupdate/'
                 })
                     .done(function (data) {
-                        $('#ws').text("Wintersemester "+data.year);
+                        $('#ws').text("Wintersemester "+data.year+', '+data.state+', '+data.gender);
                         let $map = $('#folium-map').contents().clone();
                         let $new_map = $(data.map);
                         //TODO: Optimize map include
@@ -128,7 +128,6 @@ $(document).ready(function () {
             .done(function (data) {
 
                 var ds = Bokeh.documents[0].get_model_by_name('students');
-                console.log(ds);
                 ds.data = data.data;
                 ds.change.emit();
             });

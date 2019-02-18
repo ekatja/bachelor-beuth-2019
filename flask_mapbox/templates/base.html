@@ -13,18 +13,35 @@
 
 </head>
 <body>
-<div class="container-fluid h-100">
-
+<div class="container-fluid h-100 w-100" id="main-container">
+    <div class="row w-100 align-items-start" id="header-row">
         <div class="page-header" id="custom-header">
-          <h1>{{ page_title }} <small id="ws">Wintersemester {{ year }}</small></h1>
+          <h1>{{ page_title }} <small id="ws"> {{ year }} {{ gender }}</small></h1>
+        </div>
+    </div>
+
+    <div class="row justify-content-end" id="main-content" >
+        <div class="col-md-9 pr-0 pl-0 h-100">
+            <div class="row w-100" id="folium-map" style="z-index: -1">
+                {% block map %}
+                {% endblock %}
+            </div>
+
+            <div class="row w-100 justify-content-center" id="statistic-content">
+                <div class="btn-group dropup">
+                  <a class="dropdown-toggle"
+                          data-toggle="dropdown"
+                          aria-haspopup="true"
+                          aria-expanded="false">
+                    Mehr Information
+                  </a>
+                  <div class="dropdown-menu">
+                    <!-- Dropdown menu links -->
+                  </div>
+                </div>
+            </div>
         </div>
 
-        <div class="row justify-content-end" id="main-content">
-        <div class="col-md-9 pr-0 " id="folium-map">
-            {% block map %}
-            {% endblock %}
-
-        </div>
         <div class="col-md-3 pr-5 pl-5 " id="options-bar">
             <h2 class="mb-3">Studierende in Deutschland</h2>
 
@@ -45,7 +62,7 @@
                 {% endblock %}
             </form>
 
-             <form id="options-selector-form">
+            <form id="options-selector-form">
                 <!-- Nationality Checkbox -->
                  {% block nationality %}
                 <div class="form-group" id="form-nationality">
@@ -119,10 +136,9 @@
 
             {% block graph %}
             {% endblock %}
-
         </div>
-
     </div>
+
 </div>
 
 

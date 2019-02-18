@@ -17,7 +17,7 @@
     
     <meta name="viewport" content="width=device-width,
         initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <style>#map_b171c3c054fc43c1b4dc809773c60368 {
+    <style>#map_4a1a5fdfbafd4cc78bff9530d507b8e7 {
         position: relative;
         width: 100.0%;
         height: 100.0%;
@@ -29,7 +29,7 @@
 </head>
 <body>    
     
-    <div class="folium-map" id="map_b171c3c054fc43c1b4dc809773c60368" ></div>
+    <div class="folium-map" id="map_4a1a5fdfbafd4cc78bff9530d507b8e7" ></div>
 </body>
 <script>    
     
@@ -37,8 +37,8 @@
         var bounds = null;
     
 
-    var map_b171c3c054fc43c1b4dc809773c60368 = L.map(
-        'map_b171c3c054fc43c1b4dc809773c60368', {
+    var map_4a1a5fdfbafd4cc78bff9530d507b8e7 = L.map(
+        'map_4a1a5fdfbafd4cc78bff9530d507b8e7', {
         center: [51, 13],
         zoom: 6,
         maxBounds: bounds,
@@ -50,7 +50,7 @@
 
 
     
-    var tile_layer_41644960d9e1423283d9c30a3b771c4f = L.tileLayer(
+    var tile_layer_09c78ef029834ac9ab8f455be47175a5 = L.tileLayer(
         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         {
         "attribution": null,
@@ -62,7 +62,7 @@
         "opacity": 1,
         "subdomains": "abc",
         "tms": false
-}).addTo(map_b171c3c054fc43c1b4dc809773c60368);
+}).addTo(map_4a1a5fdfbafd4cc78bff9530d507b8e7);
     
             document.addEventListener("DOMContentLoaded", function(event) {
  
@@ -2775,7 +2775,7 @@
                 }
        
                 fill_map = function(){
-                    map = map_b171c3c054fc43c1b4dc809773c60368;
+                    map = map_4a1a5fdfbafd4cc78bff9530d507b8e7;
                     markers = markersDict[current_timestamp];
                     markers.forEach(function(element) {
                         element.addTo(map);
@@ -2790,7 +2790,7 @@
                     }
                 }
                 clear_map = function(){
-                    map = map_b171c3c054fc43c1b4dc809773c60368;
+                    map = map_4a1a5fdfbafd4cc78bff9530d507b8e7;
                     
                     for (var year in markersDict ){
                         if(year > current_timestamp){
