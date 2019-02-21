@@ -1,18 +1,5 @@
 $(document).ready(function () {
 
-    // let year_select = document.getElementById("year-slider");
-    // let output = document.getElementById("year-slider-val");
-    //
-    // output.innerHTML = year_select.value; // Display the default slider value
-    //
-    //   $('#year-slider').on('input', function (e) {
-    //       output.innerText = year_select.value;
-    //   });
-
-    // console.log(window.location);
-    //
-    //get values from year, nationality and gender selectbox
-
     console.log("Ready to work!");
 
     $('#data-selector-form').on('change', function (e) {
@@ -52,7 +39,7 @@ $(document).ready(function () {
                 $.ajax({
                     data: {
                         dataframe: $('#data-selector').val(),
-                        year: $('#year-selector').val(),
+                        year: $('#slider-value').val(),
                         nationality: $('input[name=nationality]:checked').val(),
                         gender: $("input[name=gender]:checked").val()
                     },
@@ -62,12 +49,12 @@ $(document).ready(function () {
                     .done(function (data, statusText, xhr) {
                         // console.log(data);
                         $('#ws').text("Wintersemester "+data.year+', '+data.nationality+', '+data.gender);
-                        let $map = $('#folium-map').contents().clone();
-                        let $new_map = $(data.map);
-                        //TODO: Optimize map include
-                        $('#folium-map').empty();
-                        $('#folium-map').append('<div id = \'legend-bg\'></div>');
-                        $('#folium-map').append($new_map);
+                        // let $map = $('#folium-map').contents().clone();
+                        // let $new_map = $(data.map);
+                        // //TODO: Optimize map include
+                        // $('#folium-map').empty();
+                        // $('#folium-map').append('<div id = \'legend-bg\'></div>');
+                        // $('#folium-map').append($new_map);
 
                     });
                 console.log($('input[name=nationality]:checked').val());
@@ -78,9 +65,7 @@ $(document).ready(function () {
                 $.ajax({
                     data: {
                         dataframe: $('#data-selector').val(),
-                        // year: $('output#slider-value').val(),
-                        // nationality: $('input[name=nationality]:checked').val(),
-                        // gender: $("input[name=gender]:checked").val()
+
                     },
                     type: 'POST',
                     url: '/mapupdate/'
@@ -119,35 +104,41 @@ $(document).ready(function () {
         }
     });
 
-    $('#year-slider').on('input', function (e) {
+    $('#year-slider-uni').on('input', function (e) {
 
         $.ajax({
             type: 'GET',
-            url: '/bokeh_data/'+$('output#slider-value').val()
+            url: '/bokeh_data/'+$('#year-slider-uni').find('output#slider-value').val()
         })
             .done(function (data) {
 
                 var ds = Bokeh.documents[0].get_model_by_name('students');
                 ds.data = data.data;
+                console.log(ds.data);
                 ds.change.emit();
             });
 
         $.ajax({
             data: {
                 dataframe: $('#data-selector').val(),
-                year: $('output#slider-value').val(),
+                year: $('#year-slider-uni').find('output#slider-value').val(),
             },
             type: 'POST',
             url: '/update-university-foundation-year/'
         })
             .done(function (data) {
-
+                console.log(data.year);
+                $('#uni-year').text(data.year);
             });
-
         e.preventDefault();
+    });
 
+    $('.btn-showinfo').click(function () {
+        $('.statistic-content').toggleClass('open-info');
+        $(this).find('i').toggleClass('fa-angle-up fa-angle-down');
 
     });
+
 
 });
 

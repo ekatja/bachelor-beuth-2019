@@ -3,7 +3,7 @@
 {% block map %}
 
 <div id = 'legend-bg'></div>
-    {% include 'map.html' %}
+    {% include 'timeslider.html' %}
 {% endblock %}
 
 {% block data %}
@@ -18,7 +18,15 @@
 {% endblock %}
 
 {% block year %}
-    {{ super() }}
+
+{% endblock %}
+
+{% block year_slider %}
+<div class="mb-0" id="year-slider-students"></div>
+<div class="d-flex justify-content-between" id="slider-range">
+    <span>1998/99</span>
+    <span>2016/17</span>
+</div>
 {% endblock %}
 
 {% block state %}

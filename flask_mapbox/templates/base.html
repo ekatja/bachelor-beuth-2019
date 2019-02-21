@@ -27,18 +27,30 @@
                 {% endblock %}
             </div>
 
-            <div class="row w-100 justify-content-center" id="statistic-content">
-                <div class="btn-group dropup">
-                  <a class="dropdown-toggle"
-                          data-toggle="dropdown"
-                          aria-haspopup="true"
-                          aria-expanded="false">
-                    Mehr Information
-                  </a>
-                  <div class="dropdown-menu">
-                    <!-- Dropdown menu links -->
-                  </div>
+            <div class="row w-100 mr-0 ml-0 statistic-content" >
+                <div class="btn-showinfo justify-content-center">
+                    <a><i class="fas fa-angle-up angle"></i></a>
+                    <a>Mehr Information</a>
                 </div>
+                <div class="extra-content container-fluid">
+                    <div class="row mr-0 ml-0 mt-5 mb-5 w-100 justify-content-center" id="extra-content-title">
+                        {% block articletitle %}
+                        {% endblock %}
+                    </div>
+                    <div class="row mr-0 ml-0 w-100" id="extra-content-article">
+                        <div class="col-md-5 h-100">
+                        {% block article %}
+                        {% endblock %}
+                    </div>
+                    <div class="col-md-7 h-100">
+
+                        {% block graph %}
+                        {% endblock %}
+                    </div>
+                    </div>
+
+                </div>
+
             </div>
         </div>
 
@@ -134,8 +146,6 @@
             {% block year_slider %}
             {% endblock %}
 
-            {% block graph %}
-            {% endblock %}
         </div>
     </div>
 

@@ -19,6 +19,7 @@ import fiona.crs
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash, jsonify
 from . import TimeSliderMarker
 from . import CustomArcPath
+from . import CustomTimeSliderChoropleth
 
 from jinja2 import Template
 from branca.colormap import linear
@@ -101,13 +102,18 @@ def map(year='1998/99'):
     df_year = df[df.Semester == year]
 
     bins = create_bins(MIN_STUDENTS_AMOUNT_ALL_ALL, MAX_STUDENTS_AMOUNT_ALL_ALL, 7)
+    style_dict = create_style_dict_students_bundesland(df, column='Insgesamt, Insgesamt')
 
-    create_choropleth(geo_data=state_geo, data=df_year, columns=['Bundesland', 'Insgesamt, Insgesamt'],
-                      legend='Studentenanzahl',
-                      bins=bins,
-                      gethtml=False)
+    # create_choropleth(geo_data=state_geo, data=df_year, columns=['Bundesland', 'Insgesamt, Insgesamt'],
+    #                   legend='Studentenanzahl',
+    #                   bins=bins,
+    #                   gethtml=False)
 
-    return render_template('students-state.html', year='Wintersemester'+' '+year, years=YEARS, gender='', page_title='Studierende nach Bundesländer', ds="st_bd")
+    create_timeslider_choropleth(geo_data=state_geo, style_dict=style_dict, gethtml=False)
+
+    return render_template('students-state.html',
+                           year='Wintersemester'+' '+year, years=YEARS, gender='',
+                           page_title='Studierende nach Bundesländer', ds="st_bd")
 
 
 @app.route('/mapupdate/', methods=['POST'])
@@ -180,7 +186,7 @@ def newmap():
 def timemap(year=1386):
 
     style_dict = create_unis_dict(unis)
-    # print('HOHOHOHO',style_dict.get(year))
+    # print('HOHOHOHO',style_dict)
     create_timemap(state_geo, style_dict, False)
 
     js_resources = INLINE.render_js()
@@ -189,7 +195,7 @@ def timemap(year=1386):
 
     return render_template('uni-year.html', page_title='Hochschulen nach Gründungsjahr', ds="university-foundation-year",
                            js=js_resources, css=css_resources,
-                           script=script, div=div)
+                           script=script, div=div, dict=style_dict)
 
 
 @app.route('/update-university-foundation-year/', methods=['POST'])
@@ -205,8 +211,6 @@ def university_foundation_year_update():
         print("year from form", request.form['year'])
         year = request.form['year']
 
-
-    # make_ajax_plot(unis_dict=create_unis_dict(unis))
     return jsonify(year=year)
 
 
@@ -406,6 +410,42 @@ def create_style_dict(data):
     return styledict
 
 
+# Data preparation for TimeSliderChoroplet map
+def create_style_dict_students_bundesland(data, column):
+    # create color schema for universities
+    min_color = data[column].min()
+    max_color = data[column].max()
+    cmap = linear.OrRd_09.scale(min_color, max_color)
+
+    # Create dictionary for styles
+    styledata = {}
+
+    for country in state_geo.get('features'):
+        styles = pd.DataFrame()
+        temp = data.loc[data.Bundesland == country.get('properties').get('NAME_1')]
+
+        for i, row in temp.iterrows():
+            new_df = pd.DataFrame(data={'color': [row[column]], 'opacity': [0.5], 'year': [row['Semester']]})
+            styles = styles.append(new_df, ignore_index=True)
+
+        styledata[country.get('id')] = styles
+
+    # Set color for quantity
+    for country, data in styledata.items():
+        data['color'] = data['color'].apply(cmap)
+    # Set year as index
+    for key in styledata:
+        datetime_index = styledata.get(key).year
+        styledata.get(key).set_index(datetime_index, inplace=True)
+
+
+    # Create dictionary with styles for each bundesland
+    styledict = {
+        str(country): data.to_dict(orient='index') for country, data in styledata.items()
+    }
+    return styledict
+
+
 # Create dictionary of universities for each year
 def create_unis_dict(data):
     unis_dict = {}
@@ -434,6 +474,18 @@ def create_timemap(geo_data, style_dict, gethtml=False):
     else:
         print("timemap.html")
         m.save(outfile='templates/timemap.html')
+
+
+def create_timeslider_choropleth(geo_data, style_dict, gethtml=False):
+    m = folium.Map(location=[51, 13], tiles="Openstreetmap", zoom_start=6)
+    g = CustomTimeSliderChoropleth(geo_data, style_dict).add_to(m)
+
+    if gethtml:
+        print("no html update")
+        return m.get_root().render()
+    else:
+        print("timeslider.html")
+        m.save(outfile='templates/timeslider.html')
 
 
 def create_graph(unis_dict, year=None):
@@ -465,19 +517,15 @@ def create_graph(unis_dict, year=None):
     ]
     source = ColumnDataSource(data=dict(year=x, quantity=y), name='students')
 
-    plot = figure(plot_height=400, sizing_mode='scale_width',
+    plot = figure(plot_height=400, plot_width=600,
                   toolbar_location='below',
                   tools='hover, xwheel_zoom, xpan',
                   tooltips=TOOLTIPS,
                   x_range=(1386, 2017),
                   y_range=(0,400),
-                  title='Anzahl der Hochschulen'
+                  # title='Anzahl der Hochschulen'
                   )
 
-    # if year is not None:
-    #     # plot.circle(x='year',y='quantity', size=5, source=source)
-    #     plot.vbar(x='year', top='quantity', width=0.9, source=source, line_color='white')
-    # else:
     plot.line(x='year',y='quantity',source=source,line_width=3)
 
     # plot.vbar(x='year', top='quantity', width=0.9, source=source, line_color='white')
@@ -514,6 +562,7 @@ def get_bokeh_data(year):
     # Data for plotting
     x = sorted(data.keys())
     y = s
+    print(x)
     source = ColumnDataSource(data=dict(year=x, quantity=y))
     return jsonify(source.to_json(include_defaults=True))
 

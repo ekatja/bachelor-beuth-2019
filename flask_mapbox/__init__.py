@@ -1,2 +1,3 @@
 from .custom_arcpath import CustomArcPath
 from .time_slider_marker import TimeSliderMarker
+from .custom_timeslider_choropleth import CustomTimeSliderChoropleth

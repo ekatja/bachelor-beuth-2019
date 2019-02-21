@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block page_script %}
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+
     <!-- Bokeh includes-->
     {{ js | safe }}
     {{ css | safe }}
@@ -15,8 +15,7 @@
     width: 220px;
     height: 120px;
     background-color: white;
-    //border: 1px solid grey;
-    z-index: 9999;
+    z-index: 999;
     font-size: 12px;
     padding: 10px 5px 5px 10px;
     -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);
@@ -47,16 +46,60 @@
 {% endblock %}
 
 {% block year_slider %}
-<div class="mb-0" id="year-slider"></div>
-<div class="d-flex justify-content-between" style="margin-top: -10px;">
+<div class="mb-0" id="year-slider-uni"></div>
+<div class="d-flex justify-content-between" id="slider-range">
     <span>1386</span>
     <span>2017</span>
 </div>
+{% endblock %}
 
+{% block articletitle %}
+<h4>Die Anzahl der Hochschulen in Deutschland in Jahren 1386 - 2017</h4>
+{% endblock %}
+
+{% block article %}
+<table class="table table-hover">
+  <thead>
+    <tr>
+        <th scope="col">Hochschultyp</th>
+        <th scope="col">Anzahl, Jahr <span id="uni-year">1386</span></th>
+        <th scope="col">Anzahl, Insgesamt</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <tr>
+      <th scope="row">Universität</th>
+        <td>5</td>
+        <td>15</td>
+    </tr>
+    <tr>
+        <th scope="row">Fachhochschule</th>
+        <td>3</td>
+        <td>13</td>
+    </tr>
+    <tr>
+        <th scope="row">Kunst- und Musikhochschulen</th>
+        <td>0</td>
+        <td>10</td>
+    </tr>
+    <tr>
+        <th scope="row">Hochschulen eigenen Typs</th>
+        <td>2</td>
+        <td>5</td>
+    </tr>
+    <tr>
+        <th scope="row">Insgesamt</th>
+        <td>10</td>
+        <td>43</td>
+    </tr>
+
+  </tbody>
+</table>
 {% endblock %}
 
 {% block graph %}
-<div class="mb-3" id="graph">
+<div class="float-right" id="graph">
     {{ script | safe }}
     {{ div | safe }}
 </div>
