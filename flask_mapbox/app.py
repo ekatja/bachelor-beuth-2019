@@ -71,6 +71,7 @@ with open('../../geodata/geo_germany.geojson') as data_file:
 df = pd.read_excel('../../clean_data/students_bundesland_gender_foreigner_ws1998_99_ws2016_17.xlsx')
 df_un_bl_year = pd.read_excel('../../clean_data/university_bundesland_year.xlsx')
 unis = pd.read_excel('../../data/geocoordinate_university.xlsx')
+hs_list = pd.read_excel('../../data/hs_liste.xlsx')
 # Study place vs. place where study permition was issued
 study_place = pd.read_excel('../../clean_data/students_gender_study_place_vs_study_permission_ws2006_07_ws2017_18.xlsx')
 
@@ -564,38 +565,23 @@ def get_bokeh_data(year):
     y = s
     print(x)
     source = ColumnDataSource(data=dict(year=x, quantity=y))
-    return jsonify(source.to_json(include_defaults=True))
 
+    table_data = get_data_for_uni_table(hs_list)
 
+    resp = {'source': source.to_json(include_defaults=True), 'table': table_data}
+    return jsonify(resp)
+    # return jsonify(source.to_json(include_defaults=True))
 
-def make_ajax_plot(unis_dict):
-    f = {}
-    for k in unis_dict.keys():
-        f[k] = len(unis_dict.get(k))
+def get_data_for_uni_table(data):
+    df = data[['Hochschulname', 'Hochschultyp', 'Gründungsjahr']]
+    df = df[:-3]
+    df.Hochschulname = 1
+    table = pd.pivot_table(df, values='Hochschulname', index='Gründungsjahr', columns=['Hochschultyp'], aggfunc=np.sum)
+    table = table.fillna(0)
+    table = table.rename(columns={"Fachhochschulen / HAW": "hs", "Hochschulen eigenen Typs": "other",
+                          "Kunst- und Musikhochschulen": "kmh", "Universitäten": "uni"})
+    table = table.astype(int)
+    table.index = table.index.astype(int)
+    dict = table.to_dict('index')
 
-    s = []
-    for i, item in enumerate(sorted(f.items())):
-        if i == 0:
-            s.append(item[1])
-        else:
-            s.append(s[i - 1] + item[1])
-
-    print(request.url_root)
-    source = AjaxDataSource(data_url=request.url_root + '/update-university-foundation-year/',
-                             mode='append')
-
-    x = sorted(unis_dict.keys())
-    y = s
-
-    source.data = dict(year=[])
-    print('make ajax plot ', source.data)
-    # TOOLTIPS = [
-    #     ("Jahr", "$x{0}"),
-    #     ("Anzahl", "$y{0}"),
-    # ]
-    # plot = figure(plot_height=400, sizing_mode='scale_width', toolbar_location=None, tooltips=TOOLTIPS,
-    #               x_range=(1386, 2017))
-    # plot.line('x', 'y', source=source, line_width=3)
-    #
-    # script, div = components(plot)
-    # return script, div
+    return dict

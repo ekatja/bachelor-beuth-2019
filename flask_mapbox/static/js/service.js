@@ -104,6 +104,7 @@ $(document).ready(function () {
         }
     });
 
+
     $('#year-slider-uni').on('input', function (e) {
 
         $.ajax({
@@ -112,10 +113,46 @@ $(document).ready(function () {
         })
             .done(function (data) {
 
-                var ds = Bokeh.documents[0].get_model_by_name('students');
-                ds.data = data.data;
+                let ds = Bokeh.documents[0].get_model_by_name('students');
+                ds.data = data.source.data;
                 console.log(ds.data);
                 ds.change.emit();
+
+                let currentYear = $('#year-slider-uni').find('output#slider-value').val();
+                let tableData = data.table;
+                let uniAll = 0, hsAll = 0, kmhAll = 0, otherAll = 0, resultAll = 0;
+
+                let uni = tableData[currentYear].uni;
+                let hs = tableData[currentYear].hs;
+                let kmh = tableData[currentYear].kmh;
+                let other = tableData[currentYear].other;
+                let result = uni+hs+kmh+other;
+                console.log(currentYear);
+
+                $('#uni-year').text(currentYear);
+                $('#uni').text(uni);
+                $('#hs').text(hs);
+                $('#kmh').text(kmh);
+                $('#other').text(other);
+                $('#result-year').text(result);
+
+                for (let year in tableData){
+
+                    if ( year <= currentYear){
+                        console.log("year:" + year, "currentYear: "+currentYear);
+                        uniAll += tableData[year].uni;
+                        hsAll += tableData[year].hs;
+                        kmhAll += tableData[year].kmh;
+                        otherAll += tableData[year].other;
+
+                    }
+                }
+                $('#uni-all').text(uniAll);
+                $('#hs-all').text(hsAll);
+                $('#kmh-all').text(kmhAll);
+                $('#other-all').text(otherAll);
+
+
             });
 
         $.ajax({
@@ -127,8 +164,8 @@ $(document).ready(function () {
             url: '/update-university-foundation-year/'
         })
             .done(function (data) {
-                console.log(data.year);
-                $('#uni-year').text(data.year);
+                // console.log(data.year);
+                // $('#uni-year').text(data.year);
             });
         e.preventDefault();
     });
