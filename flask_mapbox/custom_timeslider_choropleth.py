@@ -29,7 +29,7 @@ class CustomTimeSliderChoropleth(GeoJson):
     """
     _template = Template(u"""
             {% macro script(this, kwargs) %}
-            document.addEventListener("DOMContentLoaded", function(event) {
+             //document.addEventListener("DOMContentLoaded", function(event) {
                 var timestamps = {{ this.timestamps }};
                 var styledict = {{ this.styledict }};
                 var current_timestamp = timestamps[0];
@@ -120,7 +120,7 @@ class CustomTimeSliderChoropleth(GeoJson):
                 //.attr('stroke-dasharray', '5,5')
                 .attr('fill-opacity', 0);
                 fill_map();
-                });
+                //});
             {% endmacro %}
             """)
 

@@ -17,9 +17,12 @@ from geojson import Point, Feature
 import fiona.crs
 
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash, jsonify
+
 from . import TimeSliderMarker
 from . import CustomArcPath
 from . import CustomTimeSliderChoropleth
+from . import CustomGeoJson, CustomGeoJsonTooltip
+
 
 from jinja2 import Template
 from branca.colormap import linear
@@ -110,7 +113,9 @@ def map(year='1998/99'):
     #                   bins=bins,
     #                   gethtml=False)
 
-    create_timeslider_choropleth(geo_data=state_geo, style_dict=style_dict, gethtml=False)
+    create_timeslider_choropleth(geo_data=state_geo, data=df_year, columns=['Bundesland', 'Insgesamt, Insgesamt'],
+                                 style_dict=style_dict, gethtml=False)
+
 
     return render_template('students-state.html',
                            year='Wintersemester'+' '+year, years=YEARS, gender='',
@@ -118,7 +123,10 @@ def map(year='1998/99'):
 
 
 @app.route('/mapupdate/', methods=['POST'])
-def students_state_mapupdate(dataframe='st_bd', year="2016/17", nationality='Insgesamt', gender='Insgesamt'):
+def students_state_mapupdate(dataframe='st_bd',
+                             year="2016/17",
+                             nationality='Insgesamt',
+                             gender='Insgesamt'):
 
     #TODO: a = [v for v in request.form]
 
@@ -183,7 +191,7 @@ def newmap():
 
 
 # TimeSliderChoroplet
-@app.route('/university-foundation-year/', methods=['GET'])
+@app.route('/university-foundation-year/')
 def timemap(year=1386):
 
     style_dict = create_unis_dict(unis)
@@ -439,7 +447,6 @@ def create_style_dict_students_bundesland(data, column):
         datetime_index = styledata.get(key).year
         styledata.get(key).set_index(datetime_index, inplace=True)
 
-
     # Create dictionary with styles for each bundesland
     styledict = {
         str(country): data.to_dict(orient='index') for country, data in styledata.items()
@@ -477,9 +484,28 @@ def create_timemap(geo_data, style_dict, gethtml=False):
         m.save(outfile='templates/timemap.html')
 
 
-def create_timeslider_choropleth(geo_data, style_dict, gethtml=False):
+def create_timeslider_choropleth(geo_data, data, columns, style_dict, gethtml=False):
     m = folium.Map(location=[51, 13], tiles="Openstreetmap", zoom_start=6)
-    g = CustomTimeSliderChoropleth(geo_data, style_dict).add_to(m)
+    CustomTimeSliderChoropleth(geo_data, style_dict).add_to(m)
+
+    temp = tooltip_gdf[tooltip_gdf.Semester == data.Semester.values[0]]
+    # print(temp)
+    # CustomGeoJson(temp,
+    #                style_function=lambda x: {'fillColor': '#00000000', 'color': '#00000000'},
+    #                highlight_function=lambda x: {'weight': 3, 'color': 'black'},
+    #                tooltip=CustomGeoJsonTooltip(fields=columns,
+    #                                                       aliases=['Bundesland', 'Studierende'],
+    #                                                       labels=True,
+    #                                                       sticky=True)).add_to(m)
+    folium.GeoJson(temp,
+                  style_function=lambda x: {'fillColor': '#00000000', 'color': '#00000000'},
+                  highlight_function=lambda x: {'weight': 3, 'color': 'black'},
+                  tooltip=folium.GeoJsonTooltip(fields=columns,
+                                               aliases=['Bundesland', 'Studierende'],
+                                               labels=True,
+                                               sticky=True)).add_to(m)
+
+    # folium.LayerControl().add_to(m)
 
     if gethtml:
         print("no html update")
@@ -529,8 +555,6 @@ def create_graph(unis_dict, year=None):
 
     plot.line(x='year',y='quantity',source=source,line_width=3)
 
-    # plot.vbar(x='year', top='quantity', width=0.9, source=source, line_color='white')
-    # plot.toolbar.autohide = True
     plot.title.align='center'
     plot.xaxis.axis_label = "Jahr"
     plot.yaxis.axis_label = "Anzahl"
@@ -546,7 +570,6 @@ def get_bokeh_data(year):
     data = {}
     for i,(k,v) in enumerate(style_dict.items()):
         if k <= year:
-            # print(style_dict[k])
             data[k]=style_dict[k]
 
     f = {}
@@ -563,7 +586,7 @@ def get_bokeh_data(year):
     # Data for plotting
     x = sorted(data.keys())
     y = s
-    print(x)
+
     source = ColumnDataSource(data=dict(year=x, quantity=y))
 
     table_data = get_data_for_uni_table(hs_list)

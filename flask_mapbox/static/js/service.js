@@ -115,7 +115,6 @@ $(document).ready(function () {
 
                 let ds = Bokeh.documents[0].get_model_by_name('students');
                 ds.data = data.source.data;
-                console.log(ds.data);
                 ds.change.emit();
 
                 let currentYear = $('#year-slider-uni').find('output#slider-value').val();
@@ -127,7 +126,7 @@ $(document).ready(function () {
                 let kmh = tableData[currentYear].kmh;
                 let other = tableData[currentYear].other;
                 let result = uni+hs+kmh+other;
-                console.log(currentYear);
+                //console.log(currentYear);
 
                 $('#uni-year').text(currentYear);
                 $('#uni').text(uni);
@@ -139,19 +138,19 @@ $(document).ready(function () {
                 for (let year in tableData){
 
                     if ( year <= currentYear){
-                        console.log("year:" + year, "currentYear: "+currentYear);
+                        // console.log("year:" + year, "currentYear: "+currentYear);
                         uniAll += tableData[year].uni;
                         hsAll += tableData[year].hs;
                         kmhAll += tableData[year].kmh;
                         otherAll += tableData[year].other;
-
+                        resultAll = uniAll+hsAll+kmhAll+otherAll;
                     }
                 }
                 $('#uni-all').text(uniAll);
                 $('#hs-all').text(hsAll);
                 $('#kmh-all').text(kmhAll);
                 $('#other-all').text(otherAll);
-
+                $('#result-all').text(resultAll);
 
             });
 
