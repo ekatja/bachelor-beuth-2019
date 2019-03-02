@@ -29,12 +29,11 @@ class CustomTimeSliderChoropleth(GeoJson):
     """
     _template = Template(u"""
             {% macro script(this, kwargs) %}
-             //document.addEventListener("DOMContentLoaded", function(event) {
+             
                 var timestamps = {{ this.timestamps }};
                 var styledict = {{ this.styledict }};
                 var current_timestamp = timestamps[0];
                 // insert time slider
-                
                 d3.select("#year-slider-students").insert("p", ":first-child").append("input")
                     .attr("type", "range")
                     //.attr("width", "100px")
@@ -93,6 +92,7 @@ class CustomTimeSliderChoropleth(GeoJson):
                         });
                     };
                 {% endif %}
+                
                 var {{this.get_name()}} = L.geoJson(
                     {% if this.embed %}{{this.style_data()}}{% else %}"{{this.data}}"{% endif %}
                     {% if this.smooth_factor is not none or this.highlight %}
@@ -120,7 +120,7 @@ class CustomTimeSliderChoropleth(GeoJson):
                 //.attr('stroke-dasharray', '5,5')
                 .attr('fill-opacity', 0);
                 fill_map();
-                //});
+                
             {% endmacro %}
             """)
 

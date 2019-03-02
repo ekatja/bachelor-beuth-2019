@@ -23,7 +23,6 @@ from . import CustomArcPath
 from . import CustomTimeSliderChoropleth
 from . import CustomGeoJson, CustomGeoJsonTooltip
 
-
 from jinja2 import Template
 from branca.colormap import linear
 
@@ -54,6 +53,7 @@ ROUTE = [
     {"lat": 53.628, "long": 11.412, 'name': 'Schwerin'},
 ]
 
+
 @app.after_request
 def add_header(r):
     """
@@ -70,8 +70,10 @@ def add_header(r):
 with open('../../geodata/geo_germany.geojson') as data_file:
     state_geo = json.load(data_file)
 
-#Import data files
+# Import data files
 df = pd.read_excel('../../clean_data/students_bundesland_gender_foreigner_ws1998_99_ws2016_17.xlsx')
+df_population = pd.read_excel('../../clean_data/bevoelkerung_1998_2016.xlsx')
+
 df_un_bl_year = pd.read_excel('../../clean_data/university_bundesland_year.xlsx')
 unis = pd.read_excel('../../data/geocoordinate_university.xlsx')
 hs_list = pd.read_excel('../../data/hs_liste.xlsx')
@@ -79,16 +81,16 @@ hs_list = pd.read_excel('../../data/hs_liste.xlsx')
 study_place = pd.read_excel('../../clean_data/students_gender_study_place_vs_study_permission_ws2006_07_ws2017_18.xlsx')
 
 # dataset for tooltips
-tooltip =  pd.read_pickle("../../tooltip_geojson.pkl")
+tooltip = pd.read_pickle("../../tooltip_geojson.pkl")
 tooltip_place_of_study = pd.read_pickle('../../clean_data/tooltip_place_of_study_geojson.pkl')
 
-#Convert dataframe to geodataframe
+# Convert dataframe to geodataframe
 tooltip_gdf = gpd.GeoDataFrame(tooltip)
 tooltip_gdf.crs = fiona.crs.from_epsg(4326)
 tooltip_place_of_study_gdf = gpd.GeoDataFrame(tooltip_place_of_study)
 tooltip_place_of_study_gdf.crs = fiona.crs.from_epsg(4326)
 
-#Const
+# Const
 MIN_STUDENTS_AMOUNT_ALL_ALL = df['Insgesamt, Insgesamt'].min()
 
 MAX_STUDENTS_AMOUNT_ALL_ALL = df['Insgesamt, Insgesamt'].max()
@@ -102,24 +104,32 @@ YEARS = np.unique(df.Semester.values)
 @app.route('/map/')
 @app.route('/map/<year>')
 def map(year='1998/99'):
-
     df_year = df[df.Semester == year]
 
     bins = create_bins(MIN_STUDENTS_AMOUNT_ALL_ALL, MAX_STUDENTS_AMOUNT_ALL_ALL, 7)
-    style_dict = create_style_dict_students_bundesland(df, column='Insgesamt, Insgesamt')
 
-    # create_choropleth(geo_data=state_geo, data=df_year, columns=['Bundesland', 'Insgesamt, Insgesamt'],
-    #                   legend='Studentenanzahl',
-    #                   bins=bins,
-    #                   gethtml=False)
+    create_choropleth(geo_data=state_geo, data=df_year, columns=['Bundesland', 'Insgesamt, Insgesamt'],
+                      legend='Studentenanzahl',
+                      bins=bins,
+                      gethtml=False)
 
-    create_timeslider_choropleth(geo_data=state_geo, data=df_year, columns=['Bundesland', 'Insgesamt, Insgesamt'],
-                                 style_dict=style_dict, gethtml=False)
+    ws = year[:4]
+    df_population.Jahr = df_population.Jahr.astype(str)
+    # print(df_population)
+    table = df_population[df_population.Jahr == ws].iloc[:,1:]
+    table = table.to_dict('index')
+    table = table[0]
 
+    print(table)
+
+
+    # style_dict, legend = create_style_dict_students_bundesland(df, column='Insgesamt, Insgesamt')
+    # create_timeslider_choropleth(geo_data=state_geo, data=df, columns=['Bundesland', 'Insgesamt, Insgesamt'],
+    #                              style_dict=style_dict, legend=legend, gethtml=False)
 
     return render_template('students-state.html',
-                           year='Wintersemester'+' '+year, years=YEARS, gender='',
-                           page_title='Studierende nach Bundesländer', ds="st_bd")
+                           year='Wintersemester' + ' ' + year, years=YEARS, gender='',
+                           page_title='Studierende nach Bundesländer', ds="st_bd", states=STATES, table=table)
 
 
 @app.route('/mapupdate/', methods=['POST'])
@@ -127,10 +137,9 @@ def students_state_mapupdate(dataframe='st_bd',
                              year="2016/17",
                              nationality='Insgesamt',
                              gender='Insgesamt'):
+    # TODO: a = [v for v in request.form]
 
-    #TODO: a = [v for v in request.form]
-
-    print("Got request",request.form)
+    print("Got request", request.form)
 
     if request.form['dataframe']:
         print("dataframe from form", request.form['dataframe'])
@@ -163,7 +172,17 @@ def students_state_mapupdate(dataframe='st_bd',
                                 legend='Studentenanzahl',
                                 bins=bins,
                                 gethtml=True)
-        return jsonify({'map': map, 'year': year, 'nationality': nationality, 'gender':gender})
+
+        # create_timeslider_choropleth(geo_data=state_geo, data=df_year, columns=['Bundesland', str(column)],
+        #                              style_dict=style_dict, legend=legend, gethtml=False)
+        # gj = create_choropleth(geo_data=state_geo, data=df_year, columns=['Bundesland', str(column)],
+        #                         legend='Studentenanzahl',
+        #                         bins=bins,
+        #                         gethtml=True,
+        #                        geojson=True
+        #                        )
+        return jsonify({'map': map, 'year': year, 'nationality': nationality, 'gender': gender})
+        # return jsonify({'map': map, 'year': year, 'nationality': nationality, 'gender': gender, 'geojson': gj})
 
     else:
         return redirect('/university-foundation-year')
@@ -193,7 +212,6 @@ def newmap():
 # TimeSliderChoroplet
 @app.route('/university-foundation-year/')
 def timemap(year=1386):
-
     style_dict = create_unis_dict(unis)
     # print('HOHOHOHO',style_dict)
     create_timemap(state_geo, style_dict, False)
@@ -202,14 +220,14 @@ def timemap(year=1386):
     css_resources = INLINE.render_css()
     plot, script, div = create_graph(unis_dict=style_dict, year=year)
 
-    return render_template('uni-year.html', page_title='Hochschulen nach Gründungsjahr', ds="university-foundation-year",
+    return render_template('uni-year.html', page_title='Hochschulen nach Gründungsjahr',
+                           ds="university-foundation-year",
                            js=js_resources, css=css_resources,
                            script=script, div=div, dict=style_dict)
 
 
 @app.route('/update-university-foundation-year/', methods=['POST'])
 def university_foundation_year_update():
-
     print("Got request", request.form)
 
     if request.form['dataframe']:
@@ -223,27 +241,26 @@ def university_foundation_year_update():
     return jsonify(year=year)
 
 
-
 @app.route('/place-of-study/')
 def place_of_study(year='2006/2007', state='Berlin', gender='Insgesamt'):
-
     df_study_place = study_place.loc[(study_place.WS == year) & (study_place.Geschlecht == gender)]
-    bins = create_bins(study_place.loc[study_place.Geschlecht == gender][state].min(), study_place.loc[study_place.Geschlecht == gender][state].max(), 7)
+    bins = create_bins(study_place.loc[study_place.Geschlecht == gender][state].min(),
+                       study_place.loc[study_place.Geschlecht == gender][state].max(), 7)
     create_connected_map(data=df_study_place, column=state, legend='Studienort', bins=bins, gethtml=False)
 
     return render_template('place-of-study.html',
-                           year='Wintersemester'+' '+year,
-                           selected_state = state,
-                           states = STATES,
-                           years = YEARS_STUDY_PLACE,
+                           year='Wintersemester' + ' ' + year,
+                           selected_state=state,
+                           states=STATES,
+                           years=YEARS_STUDY_PLACE,
                            page_title='Studienort vs. Land des Erwerbs der HZB', ds="place-of-study")
+
 
 @app.route('/study-place-mapupdate/', methods=['POST'])
 def study_place_mapupdate(dataframe='place-of-study', year="2017/2018", gender='Insgesamt', state='Berlin'):
+    # TODO: a = [v for v in request.form]
 
-    #TODO: a = [v for v in request.form]
-
-    print("Got request",request.form)
+    print("Got request", request.form)
 
     if request.form['dataframe']:
         print("dataframe from form", request.form['dataframe'])
@@ -269,15 +286,14 @@ def study_place_mapupdate(dataframe='place-of-study', year="2017/2018", gender='
                            study_place.loc[study_place.Geschlecht == gender][state].max(), 7)
 
         map = create_connected_map(data=study_place_year, column=column,
-                                legend='Studienort', bins=bins,
-                                gethtml=True)
-        return jsonify({'map':map, 'year':year, 'gender': gender, 'state':state })
+                                   legend='Studienort', bins=bins,
+                                   gethtml=True)
+        return jsonify({'map': map, 'year': year, 'gender': gender, 'state': state})
     else:
         return redirect('/place-of-study')
 
 
 def create_connected_map(data, column, legend, bins, gethtml):
-
     m = folium.Map(location=[52, 13], tiles="Openstreetmap", zoom_start=6)
 
     folium.Choropleth(
@@ -312,12 +328,13 @@ def create_connected_map(data, column, legend, bins, gethtml):
                           ).add_to(m)
 
     # Add tooltips to each state
-    temp = tooltip_place_of_study_gdf.loc[(tooltip_place_of_study_gdf.WS == data.WS.values[0]) & (tooltip_place_of_study_gdf.Geschlecht == data.Geschlecht.values[0])]
+    temp = tooltip_place_of_study_gdf.loc[(tooltip_place_of_study_gdf.WS == data.WS.values[0]) & (
+            tooltip_place_of_study_gdf.Geschlecht == data.Geschlecht.values[0])]
     folium.GeoJson(temp,
                    style_function=lambda x: {'fillColor': '#00000000', 'color': '#00000000'},
                    highlight_function=lambda x: {'weight': 2, 'color': 'grey'},
                    tooltip=folium.features.GeoJsonTooltip(fields=['Bundesland_Studienort', str(column)],
-                                                          aliases=['Bundesland', 'Studierende aus '+ str(column)],
+                                                          aliases=['Bundesland', 'Studierende aus ' + str(column)],
                                                           labels=True,
                                                           sticky=False)).add_to(m)
 
@@ -331,10 +348,8 @@ def create_connected_map(data, column, legend, bins, gethtml):
         m.save(outfile='templates/map-place-of-study.html')
 
 
-
 # Create choropleth
-def create_choropleth(geo_data, data, columns, legend, bins, gethtml):
-
+def create_choropleth(geo_data, data, columns, legend, bins, gethtml, geojson = False):
     m = folium.Map(location=[52, 13], tiles="Openstreetmap", zoom_start=6)
 
     folium.Choropleth(
@@ -351,16 +366,21 @@ def create_choropleth(geo_data, data, columns, legend, bins, gethtml):
         highlight=True
     ).add_to(m)
 
-    #Add tooltips to each state
+    # Add tooltips to each state
     # print(data)
     temp = tooltip_gdf[tooltip_gdf.Semester == data.Semester.values[0]]
-    folium.GeoJson(temp,
+    layer = folium.GeoJson(temp,
                    style_function=lambda x: {'fillColor': '#00000000', 'color': '#00000000'},
-                   highlight_function=lambda x: {'weight':3, 'color':'black'},
+                   highlight_function=lambda x: {'weight': 3, 'color': 'black'},
                    tooltip=folium.features.GeoJsonTooltip(fields=columns,
-                                                   aliases=['Bundesland', 'Studierende'],
-                                                   labels=True,
-                                                   sticky=True)).add_to(m)
+                                                          aliases=['Bundesland', 'Studierende'],
+                                                          labels=True,
+                                                          sticky=True))
+    layer.add_to(m)
+
+    if geojson:
+        # return temp.to_json()
+        return layer.to_json()
 
     # folium.LayerControl().add_to(m)
 
@@ -374,7 +394,7 @@ def create_choropleth(geo_data, data, columns, legend, bins, gethtml):
 
 # Create bins for choropleth and round to thousands
 def create_bins(start, end, number):
-    #TODO add intelligent round option
+    # TODO add intelligent round option
     bins = []
     step = (end - start) / number
     bins.append(start)
@@ -382,6 +402,7 @@ def create_bins(start, end, number):
         bins.append(round(start + step * n, -3))
     bins.append(end + 1)
     return bins
+
 
 # Data preparation for TimeSliderChoroplet map
 def create_style_dict(data):
@@ -425,6 +446,11 @@ def create_style_dict_students_bundesland(data, column):
     min_color = data[column].min()
     max_color = data[column].max()
     cmap = linear.OrRd_09.scale(min_color, max_color)
+    print(create_bins(min_color, max_color, 7))
+    # Create legend for the map
+    legend = cmap.to_step(index=create_bins(min_color, max_color, 7))
+    legend.caption = 'Studentenzahl'
+    # colormap.add_to(world_map)
 
     # Create dictionary for styles
     styledata = {}
@@ -451,7 +477,7 @@ def create_style_dict_students_bundesland(data, column):
     styledict = {
         str(country): data.to_dict(orient='index') for country, data in styledata.items()
     }
-    return styledict
+    return styledict, legend
 
 
 # Create dictionary of universities for each year
@@ -484,28 +510,21 @@ def create_timemap(geo_data, style_dict, gethtml=False):
         m.save(outfile='templates/timemap.html')
 
 
-def create_timeslider_choropleth(geo_data, data, columns, style_dict, gethtml=False):
+def create_timeslider_choropleth(geo_data, data, columns, style_dict, legend, gethtml=False, geojson=False):
     m = folium.Map(location=[51, 13], tiles="Openstreetmap", zoom_start=6)
     CustomTimeSliderChoropleth(geo_data, style_dict).add_to(m)
 
     temp = tooltip_gdf[tooltip_gdf.Semester == data.Semester.values[0]]
-    # print(temp)
-    # CustomGeoJson(temp,
-    #                style_function=lambda x: {'fillColor': '#00000000', 'color': '#00000000'},
-    #                highlight_function=lambda x: {'weight': 3, 'color': 'black'},
-    #                tooltip=CustomGeoJsonTooltip(fields=columns,
-    #                                                       aliases=['Bundesland', 'Studierende'],
-    #                                                       labels=True,
-    #                                                       sticky=True)).add_to(m)
-    folium.GeoJson(temp,
-                  style_function=lambda x: {'fillColor': '#00000000', 'color': '#00000000'},
-                  highlight_function=lambda x: {'weight': 3, 'color': 'black'},
-                  tooltip=folium.GeoJsonTooltip(fields=columns,
-                                               aliases=['Bundesland', 'Studierende'],
-                                               labels=True,
-                                               sticky=True)).add_to(m)
 
-    # folium.LayerControl().add_to(m)
+    folium.GeoJson(temp,
+                   style_function=lambda x: {'fillColor': '#00000000', 'color': '#00000000'},
+                   highlight_function=lambda x: {'weight': 3, 'color': 'black'},
+                   tooltip=folium.GeoJsonTooltip(fields=columns,
+                                                 aliases=['Bundesland', 'Studierende'],
+                                                 labels=True,
+                                                 sticky=True)).add_to(m)
+
+    legend.add_to(m)
 
     if gethtml:
         print("no html update")
@@ -516,10 +535,9 @@ def create_timeslider_choropleth(geo_data, data, columns, style_dict, gethtml=Fa
 
 
 def create_graph(unis_dict, year=None):
-
     if year is not None:
 
-        x = [year-1, year]
+        x = [year - 1, year]
         y = [0, len(unis_dict.get(year))]
 
     else:
@@ -539,8 +557,8 @@ def create_graph(unis_dict, year=None):
         y = s
 
     TOOLTIPS = [
-    ("Jahr", "$x{0}"),
-    ("Anzahl", "$y{0}"),
+        ("Jahr", "$x{0}"),
+        ("Anzahl", "$y{0}"),
     ]
     source = ColumnDataSource(data=dict(year=x, quantity=y), name='students')
 
@@ -549,13 +567,13 @@ def create_graph(unis_dict, year=None):
                   tools='hover, xwheel_zoom, xpan',
                   tooltips=TOOLTIPS,
                   x_range=(1386, 2017),
-                  y_range=(0,400),
+                  y_range=(0, 400),
                   # title='Anzahl der Hochschulen'
                   )
 
-    plot.line(x='year',y='quantity',source=source,line_width=3)
+    plot.line(x='year', y='quantity', source=source, line_width=3)
 
-    plot.title.align='center'
+    plot.title.align = 'center'
     plot.xaxis.axis_label = "Jahr"
     plot.yaxis.axis_label = "Anzahl"
     plot.axis.axis_label_text_font_style = 'normal'
@@ -568,9 +586,9 @@ def create_graph(unis_dict, year=None):
 def get_bokeh_data(year):
     style_dict = create_unis_dict(unis)
     data = {}
-    for i,(k,v) in enumerate(style_dict.items()):
+    for i, (k, v) in enumerate(style_dict.items()):
         if k <= year:
-            data[k]=style_dict[k]
+            data[k] = style_dict[k]
 
     f = {}
     for k in data.keys():
@@ -595,6 +613,7 @@ def get_bokeh_data(year):
     return jsonify(resp)
     # return jsonify(source.to_json(include_defaults=True))
 
+
 def get_data_for_uni_table(data):
     df = data[['Hochschulname', 'Hochschultyp', 'Gründungsjahr']]
     df = df[:-3]
@@ -602,7 +621,7 @@ def get_data_for_uni_table(data):
     table = pd.pivot_table(df, values='Hochschulname', index='Gründungsjahr', columns=['Hochschultyp'], aggfunc=np.sum)
     table = table.fillna(0)
     table = table.rename(columns={"Fachhochschulen / HAW": "hs", "Hochschulen eigenen Typs": "other",
-                          "Kunst- und Musikhochschulen": "kmh", "Universitäten": "uni"})
+                                  "Kunst- und Musikhochschulen": "kmh", "Universitäten": "uni"})
     table = table.astype(int)
     table.index = table.index.astype(int)
     dict = table.to_dict('index')

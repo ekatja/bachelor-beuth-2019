@@ -3,7 +3,8 @@
 {% block map %}
 
 <div id = 'legend-bg'></div>
-    {% include 'timeslider.html' %}
+    <!--{% include 'timeslider.html' %}-->
+    {% include 'map.html' %}
 {% endblock %}
 
 {% block data %}
@@ -19,18 +20,53 @@
 {% endblock %}
 
 {% block year %}
-
+    {{ super() }}
 {% endblock %}
 
 {% block year_slider %}
-<div class="mb-0" id="year-slider-students"></div>
-<div class="d-flex justify-content-between" id="slider-range">
-    <span>1998/99</span>
-    <span>2016/17</span>
-</div>
+<!--<div class="mb-0" id="year-slider-students"></div>-->
+<!--<div class="d-flex justify-content-between" id="slider-range">-->
+    <!--<span>1998/99</span>-->
+    <!--<span>2016/17</span>-->
+<!--</div>-->
 {% endblock %}
 
 {% block state %}
+{% endblock %}
+
+{% block articletitle %}
+<h4>Die Anzahl der Studierenden in Deutschland</h4>
+{% endblock %}
+
+{% block article %}
+<table class="table table-hover">
+  <thead>
+    <tr>
+        <th scope="col">Bundesland</th>
+        <th scope="col">Bevölkerung</th>
+        <th scope="col">Studierende, abs.</th>
+        <th scope="col">Studierende, rel.</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for state, pop in table.items() %}
+    <tr>
+      <th scope="row">{{ state|e }}</th>
+        <td id="population">{{ pop }}</td>
+        <td id="students_a">1</td>
+        <td id="students_r">1</td>
+    </tr>
+    {% endfor %}
+
+  </tbody>
+</table>
+{% endblock %}
+
+{% block graph %}
+<!--<div class="float-right" id="graph">-->
+    <!--{{ script | safe }}-->
+    <!--{{ div | safe }}-->
+<!--</div>-->
 {% endblock %}
 
 {% block scripts %}

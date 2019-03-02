@@ -39,7 +39,8 @@ $(document).ready(function () {
                 $.ajax({
                     data: {
                         dataframe: $('#data-selector').val(),
-                        year: $('#slider-value').val(),
+                        // year: $('#slider-value').val(),
+                        year: $('#year-selector').val(),
                         nationality: $('input[name=nationality]:checked').val(),
                         gender: $("input[name=gender]:checked").val()
                     },
@@ -49,15 +50,24 @@ $(document).ready(function () {
                     .done(function (data, statusText, xhr) {
                         // console.log(data);
                         $('#ws').text("Wintersemester "+data.year+', '+data.nationality+', '+data.gender);
-                        // let $map = $('#folium-map').contents().clone();
-                        // let $new_map = $(data.map);
+                        let $map = $('#folium-map').contents().clone();
+                        let $new_map = $(data.map);
                         // //TODO: Optimize map include
-                        // $('#folium-map').empty();
-                        // $('#folium-map').append('<div id = \'legend-bg\'></div>');
-                        // $('#folium-map').append($new_map);
+                        // let map_name = $("div[id*='map_']").get(0).id;
+                        // let map = window[map_name];
+                        //
+                        // let gj = JSON.parse(data.geojson);
+                        // console.log(gj);
+
+                        // L.geoJSON(gj).addTo(map);
+                        //map.addLayer(gj);
+
+                        $('#folium-map').empty();
+                        $('#folium-map').append('<div id = \'legend-bg\'></div>');
+                        $('#folium-map').append($new_map);
 
                     });
-                console.log($('input[name=nationality]:checked').val());
+                // console.log($('#slider-value').val());
                 break;
             }
             case '/university-foundation-year/': {
