@@ -69,7 +69,7 @@ def add_header(r):
     return r
 
 
-with open('../../geodata/geo_germany.geojson') as data_file:
+with open('dataset/geo_germany.geojson') as data_file:
     state_geo = json.load(data_file)
 
 # Import data files
