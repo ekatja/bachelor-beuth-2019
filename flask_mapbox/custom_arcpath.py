@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# from __future__ import (absolute_import, division, print_function)
 
 import json
 
@@ -43,7 +42,7 @@ class CustomArcPath(Marker):
                 L.marker([from.lng, from.lat]).addTo({{this._parent.get_name()}});
                 }
             catch(err) {
-                console.log('location[0] is a point', err);
+                console.log('location[0] is not a point', err);
                 var from = {{this.location[0]}};
             }
             try {
@@ -52,7 +51,7 @@ class CustomArcPath(Marker):
                 L.marker([to.lng, to.lat]).addTo({{this._parent.get_name()}});
                 }
             catch(err) {
-                console.log('location[1] is a point', err);
+                console.log('location[1] is not a point', err);
                 var to = {{this.location[1]}};
             }
             from_poly.remove();
@@ -84,17 +83,10 @@ class CustomArcPath(Marker):
         # print(path_options())
         options = path_options(line=True, **kwargs)
         options.update({
-            # 'paused': kwargs.pop('paused', False),
-            # 'reverse': kwargs.pop('reverse', False),
-            # 'hardwareAcceleration': kwargs.pop('hardware_acceleration', False),
-            # 'delay': kwargs.pop('delay', 400),
-            # 'dashArray': kwargs.pop('dash_array', [10, 20]),
             'vertices': kwargs.pop('vertices', 100),
             'offset': kwargs.pop('offset', 10),
             'weight': kwargs.pop('weight', 5),
-            # 'opacity': kwargs.pop('opacity', 0.5),
             'color': kwargs.pop('color', 'red'),
-            # 'pulseColor': kwargs.pop('pulse_color', '#FFFFFF'),
         })
         self.options = json.dumps(options, sort_keys=True, indent=2)
 

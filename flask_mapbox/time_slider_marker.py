@@ -38,8 +38,6 @@ class TimeSliderMarker(GeoJson):
     #     template = Template(file_.read())
     # template.render(name='John')
 
-
-
     _template = Template(u"""
             {% macro script(this, kwargs) %}
             document.addEventListener("DOMContentLoaded", function(event) {
@@ -139,11 +137,9 @@ class TimeSliderMarker(GeoJson):
         if not isinstance(styledict, dict):
             raise ValueError('styledict must be a dictionary, got {!r}'.format(styledict))  # noqa
 
-
         # Make set of timestamps.
         timestamps = set()
         for key in styledict.keys():
-            # print(key)
             timestamps.add(key)
         timestamps = sorted(list(timestamps))
 

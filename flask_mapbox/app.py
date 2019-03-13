@@ -8,6 +8,8 @@ from bokeh.plotting import figure, Figure
 from bokeh.embed import components
 from bokeh.resources import INLINE
 from bokeh.models import ColumnDataSource
+from bokeh.models.widgets import DataTable, DateFormatter, TableColumn
+from bokeh.layouts import widgetbox
 from bokeh.models.sources import AjaxDataSource
 from bokeh.models.callbacks import CustomJS
 import xlrd
@@ -71,18 +73,25 @@ with open('../../geodata/geo_germany.geojson') as data_file:
     state_geo = json.load(data_file)
 
 # Import data files
-df = pd.read_excel('../../clean_data/students_bundesland_gender_foreigner_ws1998_99_ws2016_17.xlsx')
-df_population = pd.read_excel('../../clean_data/bevoelkerung_1998_2016.xlsx')
+# df = pd.read_excel('../../clean_data/students_bundesland_gender_foreigner_ws1998_99_ws2016_17.xlsx')
+# df_population = pd.read_excel('../../clean_data/bevoelkerung_1998_2016.xlsx')
+df = pd.read_pickle("dataset/students_bundesland_gender_foreigner_ws1998_99_ws2016_17.pkl")
+df_population = pd.read_pickle("dataset/bevoelkerung_1998_2016.pkl")
 
-df_un_bl_year = pd.read_excel('../../clean_data/university_bundesland_year.xlsx')
-unis = pd.read_excel('../../data/geocoordinate_university.xlsx')
-hs_list = pd.read_excel('../../data/hs_liste.xlsx')
+# df_un_bl_year = pd.read_excel('../../clean_data/university_bundesland_year.xlsx')
+# unis = pd.read_excel('../../data/geocoordinate_university.xlsx')
+# hs_list = pd.read_excel('../../data/hs_liste.xlsx')
+df_un_bl_year = pd.read_pickle("dataset/university_bundesland_year.pkl")
+unis = pd.read_pickle('dataset/geocoordinate_university.pkl')
+hs_list = pd.read_pickle('dataset/hs_liste.pkl')
+
 # Study place vs. place where study permition was issued
-study_place = pd.read_excel('../../clean_data/students_gender_study_place_vs_study_permission_ws2006_07_ws2017_18.xlsx')
+# study_place = pd.read_excel('../../clean_data/students_gender_study_place_vs_study_permission_ws2006_07_ws2017_18.xlsx')
+study_place = pd.read_pickle('dataset/students_gender_study_place_vs_study_permission_ws2006_07_ws2017_18.pkl')
 
 # dataset for tooltips
-tooltip = pd.read_pickle("../../tooltip_geojson.pkl")
-tooltip_place_of_study = pd.read_pickle('../../clean_data/tooltip_place_of_study_geojson.pkl')
+tooltip = pd.read_pickle("dataset/tooltip_geojson.pkl")
+tooltip_place_of_study = pd.read_pickle('dataset/tooltip_place_of_study_geojson.pkl')
 
 # Convert dataframe to geodataframe
 tooltip_gdf = gpd.GeoDataFrame(tooltip)
@@ -113,23 +122,25 @@ def map(year='1998/99'):
                       bins=bins,
                       gethtml=False)
 
-    ws = year[:4]
-    df_population.Jahr = df_population.Jahr.astype(str)
-    # print(df_population)
-    table = df_population[df_population.Jahr == ws].iloc[:,1:]
-    table = table.to_dict('index')
-    table = table[0]
+    table = get_data_for_studens_states_table(dataset=df_population,
+                                              dataset2=df_year, year=year[:4], column='Insgesamt, Insgesamt')
 
-    print(table)
-
-
+    # print(table)
+    # js_resources = INLINE.render_js()
+    # css_resources = INLINE.render_css()
+    #
+    # script, div = create_bokeh_table(dataset=df_population, year=1998)
     # style_dict, legend = create_style_dict_students_bundesland(df, column='Insgesamt, Insgesamt')
     # create_timeslider_choropleth(geo_data=state_geo, data=df, columns=['Bundesland', 'Insgesamt, Insgesamt'],
     #                              style_dict=style_dict, legend=legend, gethtml=False)
 
     return render_template('students-state.html',
                            year='Wintersemester' + ' ' + year, years=YEARS, gender='',
-                           page_title='Studierende nach Bundesländer', ds="st_bd", states=STATES, table=table)
+                           page_title='Studierende nach Bundesländer', ds="st_bd",
+                           states=STATES,
+                           table=table
+                           # script=script, table=div, js=js_resources, css=css_resources
+                           )
 
 
 @app.route('/mapupdate/', methods=['POST'])
@@ -367,7 +378,6 @@ def create_choropleth(geo_data, data, columns, legend, bins, gethtml, geojson = 
     ).add_to(m)
 
     # Add tooltips to each state
-    # print(data)
     temp = tooltip_gdf[tooltip_gdf.Semester == data.Semester.values[0]]
     layer = folium.GeoJson(temp,
                    style_function=lambda x: {'fillColor': '#00000000', 'color': '#00000000'},
@@ -627,3 +637,19 @@ def get_data_for_uni_table(data):
     dict = table.to_dict('index')
 
     return dict
+
+def get_data_for_studens_states_table(dataset, dataset2, year, column):
+
+    dataset.Jahr = dataset.Jahr.astype(str)
+    # print(df_population)
+    table = dataset[dataset.Jahr == year].iloc[:,1:]
+
+    data = dict(
+        states=[state for state in table.columns],
+        population=[int(value*1000) for value in table.loc[0]],
+        students_abs=[value for value in dataset2[column]],
+    )
+    table_data = list(zip(data['states'], data['population'], data['students_abs']))
+    print(table_data)
+
+    return table_data

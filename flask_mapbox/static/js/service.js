@@ -4,9 +4,9 @@ $(document).ready(function () {
 
     $('#data-selector-form').on('change', function (e) {
 
-        console.log("Changed data selector");
-        console.log(window.location.pathname);
-        console.log($('#data-selector').val());
+        // console.log("Changed data selector");
+        // console.log(window.location.pathname);
+        // console.log($('#data-selector').val());
         switch ($('#data-selector').val()) {
 
             case 'st_bd': {
@@ -182,7 +182,6 @@ $(document).ready(function () {
     $('.btn-showinfo').click(function () {
         $('.statistic-content').toggleClass('open-info');
         $(this).find('i').toggleClass('fa-angle-up fa-angle-down');
-
     });
 
 

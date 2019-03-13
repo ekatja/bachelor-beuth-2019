@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 
+
 {% block map %}
 
 <div id = 'legend-bg'></div>
@@ -39,22 +40,23 @@
 {% endblock %}
 
 {% block article %}
-<table class="table table-hover">
+
+<table class="table table-hover w-50" id="table-students-states" >
   <thead>
     <tr>
-        <th scope="col">Bundesland</th>
-        <th scope="col">Bevölkerung</th>
-        <th scope="col">Studierende, abs.</th>
-        <th scope="col">Studierende, rel.</th>
+        <th class="d-inline-block col-4" scope="col">Bundesland</th>
+        <th class="d-inline-block col-2 text-right" scope="col">Bevölkerung</th>
+        <th class="d-inline-block col-3 text-right" scope="col">Studierende, abs.</th>
+        <th class="d-inline-block col-3 text-right" scope="col">Studierende, rel.</th>
     </tr>
   </thead>
   <tbody>
-    {% for state, pop in table.items() %}
+     {% for key in table %}
     <tr>
-      <th scope="row">{{ state|e }}</th>
-        <td id="population">{{ pop }}</td>
-        <td id="students_a">1</td>
-        <td id="students_r">1</td>
+        <th class="d-inline-block col-4" scope="row">{{ key[0]|e }}</th>
+        <td class='d-inline-block col-2 text-right' id="population">{{ "{:,}".format(key[1])|e }}</td>
+        <td class='d-inline-block col-3 text-right' id="students_a">{{ "{:,}".format(key[2])|e }}</td>
+        <td class='d-inline-block col-3 text-right' id="students_r">{{ "{:.2%}".format(key[2]/key[1])|e }}</td>
     </tr>
     {% endfor %}
 
