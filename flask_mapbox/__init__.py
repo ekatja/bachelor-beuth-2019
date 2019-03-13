@@ -1,4 +1,4 @@
 from .custom_arcpath import CustomArcPath
 from .time_slider_marker import TimeSliderMarker
 from .custom_timeslider_choropleth import CustomTimeSliderChoropleth
-from .custom_geojson import CustomGeoJson, CustomGeoJsonTooltip
+

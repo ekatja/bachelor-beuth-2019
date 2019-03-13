@@ -1,32 +1,20 @@
 import json
-import folium
-from folium import plugins
-import pandas as pd
-import numpy as np
-import geopandas as gpd
-from bokeh.plotting import figure, Figure
-from bokeh.embed import components
-from bokeh.resources import INLINE
-from bokeh.models import ColumnDataSource
-from bokeh.models.widgets import DataTable, DateFormatter, TableColumn
-from bokeh.layouts import widgetbox
-from bokeh.models.sources import AjaxDataSource
-from bokeh.models.callbacks import CustomJS
-import xlrd
-import requests
-import branca
-from geojson import Point, Feature
+
 import fiona.crs
+import folium
+import geopandas as gpd
+import numpy as np
+import pandas as pd
+from bokeh.embed import components
+from bokeh.models import ColumnDataSource
+from bokeh.plotting import figure
+from bokeh.resources import INLINE
+from branca.colormap import linear
+from flask import Flask, request, redirect, render_template, jsonify
 
-from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash, jsonify
-
-from . import TimeSliderMarker
 from . import CustomArcPath
 from . import CustomTimeSliderChoropleth
-from . import CustomGeoJson, CustomGeoJsonTooltip
-
-from jinja2 import Template
-from branca.colormap import linear
+from . import TimeSliderMarker
 
 app = Flask(__name__)
 app.config.from_object(__name__)

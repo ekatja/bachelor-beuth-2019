@@ -8,8 +8,6 @@ from branca.element import Figure, JavascriptLink
 from folium import Marker
 from folium.vector_layers import path_options
 
-from geojson_utils import centroid
-
 from jinja2 import Template
 
 class CustomArcPath(Marker):
