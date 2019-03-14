@@ -78,14 +78,14 @@ hs_list = pd.read_pickle('dataset/hs_liste.pkl')
 study_place = pd.read_pickle('dataset/students_gender_study_place_vs_study_permission_ws2006_07_ws2017_18.pkl')
 
 # dataset for tooltips
-tooltip = pd.read_pickle("dataset/tooltip_geojson.pkl")
-tooltip_place_of_study = pd.read_pickle('dataset/tooltip_place_of_study_geojson.pkl')
+tooltip_gdf = pd.read_pickle("dataset/tooltip_geojson_fiona.pkl")
+tooltip_place_of_study_gdf = pd.read_pickle('dataset/tooltip_place_of_study_geojson_fiona.pkl')
 
 # Convert dataframe to geodataframe
-tooltip_gdf = gpd.GeoDataFrame(tooltip)
-tooltip_gdf.crs = fiona.crs.from_epsg(4326)
-tooltip_place_of_study_gdf = gpd.GeoDataFrame(tooltip_place_of_study)
-tooltip_place_of_study_gdf.crs = fiona.crs.from_epsg(4326)
+# tooltip_gdf = gpd.GeoDataFrame(tooltip)
+# tooltip_gdf.crs = fiona.crs.from_epsg(4326)
+# tooltip_place_of_study_gdf = gpd.GeoDataFrame(tooltip_place_of_study)
+# tooltip_place_of_study_gdf.crs = fiona.crs.from_epsg(4326)
 
 # Const
 MIN_STUDENTS_AMOUNT_ALL_ALL = df['Insgesamt, Insgesamt'].min()
@@ -212,7 +212,6 @@ def newmap():
 @app.route('/university-foundation-year/')
 def timemap(year=1386):
     style_dict = create_unis_dict(unis)
-    # print('HOHOHOHO',style_dict)
     create_timemap(state_geo, style_dict, False)
 
     js_resources = INLINE.render_js()
