@@ -48,7 +48,7 @@ $(document).ready(function () {
                     url: '/mapupdate/'
                 })
                     .done(function (data, statusText, xhr) {
-                        // console.log(data);
+                        console.log(data.table[0]);
                         $('#ws').text("Wintersemester "+data.year+', '+data.nationality+', '+data.gender);
                         let $map = $('#folium-map').contents().clone();
                         let $new_map = $(data.map);
@@ -61,10 +61,20 @@ $(document).ready(function () {
 
                         // L.geoJSON(gj).addTo(map);
                         //map.addLayer(gj);
-
                         $('#folium-map').empty();
                         $('#folium-map').append('<div id = \'legend-bg\'></div>');
                         $('#folium-map').append($new_map);
+
+                        let table = data.table;
+                        let pop = $('.population');
+                        let studAbs = $('.students_a');
+                        let studRel = $('.students_r');
+
+                        for (var i = 0; i < 16; i++){
+                            pop[i].textContent = numeral(table[i][1]).format('0,0');
+                            studAbs[i].textContent = numeral(table[i][2]).format('0,0');
+                            studRel[i].textContent = numeral(table[i][2]/table[i][1]).format('0.00%');
+                        }
 
                     });
                 // console.log($('#slider-value').val());
@@ -107,6 +117,18 @@ $(document).ready(function () {
                         $('#folium-map').empty();
                         $('#folium-map').append('<div id = \'legend-bg\'></div>');
                         $('#folium-map').append($new_map);
+
+                        $('#state-hzb').text(data.state);
+                        let table = data.table;
+                        let total = data.total;
+                        let studAbs = $('.students_a');
+                        let studRel = $('.students_r');
+
+                        for (var i = 0; i < 16; i++){
+                            studAbs[i].textContent = numeral(table[i][1]).format('0,0');
+                            studRel[i].textContent = numeral(table[i][1]/total).format('0.00%');
+                        }
+
                     });
                 break;
             }

@@ -23,27 +23,6 @@ app.config.from_object(__name__)
 app.config.from_envvar('APP_CONFIG_FILE', silent=True)
 # MAPBOX_ACCESS_KEY = app.config['MAPBOX_ACCESS_KEY']
 
-# geo-coordinate points along the route
-ROUTE = [
-    {"lat": 52.523, "long": 13.413, 'name': 'Berlin', 'admin1code': ''},
-    {"lat": 52.401, "long": 13.049, 'name': 'Potsdam'},
-    {"lat": 52.122, "long": 11.619, 'name': 'Magdeburg'},
-    {"lat": 51.050, "long": 13.739, 'name': 'Dresden'},
-    {"lat": 50.986, "long": 11.002, 'name': 'Erfurt'},
-    {"lat": 48.133, "long": 11.567, 'name': 'Muenchen'},
-    {"lat": 48.783, "long": 9.183, 'name': 'Stuttgart'},
-    {"lat": 50.100, "long": 8.233, 'name': 'Wiesbaden'},
-    {"lat": 50.000, "long": 8.267, 'name': 'Mainz'},
-    {"lat": 49.233, "long": 7.000, 'name': 'Saarbruecken'},
-    {"lat": 51.233, "long": 6.783, 'name': 'Duesseldorf'},
-    {"lat": 52.383, "long": 9.733, 'name': 'Hannover'},
-    {"lat": 53.083, "long": 8.817, 'name': 'Bremen'},
-    {"lat": 53.567, "long": 10.033, 'name': 'Hamburg'},
-    {"lat": 54.333, "long": 10.133, 'name': 'Kiel'},
-    {"lat": 53.628, "long": 11.412, 'name': 'Schwerin'},
-]
-
-
 @app.after_request
 def add_header(r):
     """
@@ -56,25 +35,18 @@ def add_header(r):
     r.headers['Cache-Control'] = 'public, max-age=0'
     return r
 
-
+# Import geojson
 with open('dataset/geo_germany.geojson') as data_file:
     state_geo = json.load(data_file)
 
 # Import data files
-# df = pd.read_excel('../../clean_data/students_bundesland_gender_foreigner_ws1998_99_ws2016_17.xlsx')
-# df_population = pd.read_excel('../../clean_data/bevoelkerung_1998_2016.xlsx')
 df = pd.read_pickle("dataset/students_bundesland_gender_foreigner_ws1998_99_ws2016_17.pkl")
 df_population = pd.read_pickle("dataset/bevoelkerung_1998_2016.pkl")
-
-# df_un_bl_year = pd.read_excel('../../clean_data/university_bundesland_year.xlsx')
-# unis = pd.read_excel('../../data/geocoordinate_university.xlsx')
-# hs_list = pd.read_excel('../../data/hs_liste.xlsx')
 df_un_bl_year = pd.read_pickle("dataset/university_bundesland_year.pkl")
 unis = pd.read_pickle('dataset/geocoordinate_university.pkl')
 hs_list = pd.read_pickle('dataset/hs_liste.pkl')
 
 # Study place vs. place where study permition was issued
-# study_place = pd.read_excel('../../clean_data/students_gender_study_place_vs_study_permission_ws2006_07_ws2017_18.xlsx')
 study_place = pd.read_pickle('dataset/students_gender_study_place_vs_study_permission_ws2006_07_ws2017_18.pkl')
 
 # dataset for tooltips
@@ -89,13 +61,10 @@ tooltip_place_of_study_gdf = pd.read_pickle('dataset/tooltip_place_of_study_geoj
 
 # Const
 MIN_STUDENTS_AMOUNT_ALL_ALL = df['Insgesamt, Insgesamt'].min()
-
 MAX_STUDENTS_AMOUNT_ALL_ALL = df['Insgesamt, Insgesamt'].max()
-
 STATES = np.unique(study_place.Bundesland_Studienort.values)
 YEARS_STUDY_PLACE = np.unique(study_place.WS.values)
 YEARS = np.unique(df.Semester.values)
-
 
 # route to the new template and send value from url
 @app.route('/map/')
@@ -172,15 +141,10 @@ def students_state_mapupdate(dataframe='st_bd',
                                 bins=bins,
                                 gethtml=True)
 
-        # create_timeslider_choropleth(geo_data=state_geo, data=df_year, columns=['Bundesland', str(column)],
-        #                              style_dict=style_dict, legend=legend, gethtml=False)
-        # gj = create_choropleth(geo_data=state_geo, data=df_year, columns=['Bundesland', str(column)],
-        #                         legend='Studentenanzahl',
-        #                         bins=bins,
-        #                         gethtml=True,
-        #                        geojson=True
-        #                        )
-        return jsonify({'map': map, 'year': year, 'nationality': nationality, 'gender': gender})
+        table = get_data_for_studens_states_table(dataset=df_population,
+                                              dataset2=df_year, year=year[:4], column=column)
+
+        return jsonify({'map': map, 'year': year, 'nationality': nationality, 'gender': gender, 'table': table})
         # return jsonify({'map': map, 'year': year, 'nationality': nationality, 'gender': gender, 'geojson': gj})
 
     else:
@@ -242,16 +206,19 @@ def university_foundation_year_update():
 @app.route('/place-of-study/')
 def place_of_study(year='2006/2007', state='Berlin', gender='Insgesamt'):
     df_study_place = study_place.loc[(study_place.WS == year) & (study_place.Geschlecht == gender)]
+
     bins = create_bins(study_place.loc[study_place.Geschlecht == gender][state].min(),
                        study_place.loc[study_place.Geschlecht == gender][state].max(), 7)
     create_connected_map(data=df_study_place, column=state, legend='Studienort', bins=bins, gethtml=False)
+
+    table, total = get_data_for_place_of_study_table(df_study_place, state)
 
     return render_template('place-of-study.html',
                            year='Wintersemester' + ' ' + year,
                            selected_state=state,
                            states=STATES,
                            years=YEARS_STUDY_PLACE,
-                           page_title='Studienort vs. Land des Erwerbs der HZB', ds="place-of-study")
+                           page_title='Studienort vs. Land des Erwerbs der HZB', ds="place-of-study", table=table, total = total)
 
 
 @app.route('/study-place-mapupdate/', methods=['POST'])
@@ -286,7 +253,10 @@ def study_place_mapupdate(dataframe='place-of-study', year="2017/2018", gender='
         map = create_connected_map(data=study_place_year, column=column,
                                    legend='Studienort', bins=bins,
                                    gethtml=True)
-        return jsonify({'map': map, 'year': year, 'gender': gender, 'state': state})
+
+        table, total = get_data_for_place_of_study_table(study_place_year, state)
+
+        return jsonify({'map': map, 'year': year, 'gender': gender, 'state': state, 'table': table, 'total': int(total)})
     else:
         return redirect('/place-of-study')
 
@@ -625,11 +595,14 @@ def get_data_for_uni_table(data):
 
     return dict
 
+# dataset = population
+# dataset2 = students
 def get_data_for_studens_states_table(dataset, dataset2, year, column):
 
     dataset.Jahr = dataset.Jahr.astype(str)
-    # print(df_population)
+
     table = dataset[dataset.Jahr == year].iloc[:,1:]
+    table = table.reset_index(drop=True)
 
     data = dict(
         states=[state for state in table.columns],
@@ -640,3 +613,13 @@ def get_data_for_studens_states_table(dataset, dataset2, year, column):
     print(table_data)
 
     return table_data
+
+
+def get_data_for_place_of_study_table(dataset, state_hzb):
+
+
+    table_data = list(zip(dataset['Bundesland_Studienort'], dataset[state_hzb]))
+    total = dataset[state_hzb].sum()
+    print(table_data, total)
+
+    return table_data, total

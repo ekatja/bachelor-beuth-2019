@@ -54,9 +54,9 @@
      {% for key in table %}
     <tr>
         <th class="d-inline-block col-4" scope="row">{{ key[0]|e }}</th>
-        <td class='d-inline-block col-2 text-right' id="population">{{ "{:,}".format(key[1])|e }}</td>
-        <td class='d-inline-block col-3 text-right' id="students_a">{{ "{:,}".format(key[2])|e }}</td>
-        <td class='d-inline-block col-3 text-right' id="students_r">{{ "{:.2%}".format(key[2]/key[1])|e }}</td>
+        <td class='d-inline-block col-2 text-right population'>{{ "{:,}".format(key[1])|e }}</td>
+        <td class='d-inline-block col-3 text-right students_a'>{{ "{:,}".format(key[2])|e }}</td>
+        <td class='d-inline-block col-3 text-right students_r'>{{ "{:.2%}".format(key[2]/key[1])|e }}</td>
     </tr>
     {% endfor %}
 

@@ -36,6 +36,34 @@
     {{ super()}}
 {% endblock%}
 
+{% block articletitle %}
+<h4>Verteilung der Studierenden nach Bundesländer, die in <span id="state-hzb">{{ selected_state }} </span> die HZB bekommen haben</h4>
+{% endblock %}
+
+{% block article %}
+<table class="table table-hover w-50" id="table-place-of-study" >
+  <thead>
+    <tr>
+        <th class="d-inline-block col-4" scope="col">Bundesland</th>
+        <th class="d-inline-block col-3 text-right" scope="col">Studierende, abs.</th>
+        <th class="d-inline-block col-3 text-right" scope="col">Studierende, rel.</th>
+    </tr>
+  </thead>
+  <tbody>
+     {% for key in table %}
+    <tr>
+        <th class="d-inline-block col-4" scope="row">{{ key[0]|e }}</th>
+        <td class='d-inline-block col-3 text-right students_a'>{{ "{:,}".format(key[1])|e }}</td>
+        <td class='d-inline-block col-3 text-right students_r'>{{ "{:.2%}".format(key[1]/total)|e }}</td>
+    </tr>
+    {% endfor %}
+
+  </tbody>
+</table>
+
+{% endblock %}
+
+
 {% block scripts %}
     {{ super() }}
 {% endblock %}
