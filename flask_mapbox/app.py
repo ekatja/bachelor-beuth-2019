@@ -1,14 +1,14 @@
 import json
 
-import fiona.crs
 import folium
-import geopandas as gpd
 import numpy as np
 import pandas as pd
 from bokeh.embed import components
 from bokeh.models import ColumnDataSource
+from bokeh.models import NumeralTickFormatter
 from bokeh.plotting import figure
 from bokeh.resources import INLINE
+from bokeh.transform import factor_cmap
 from branca.colormap import linear
 from flask import Flask, request, redirect, render_template, jsonify
 
@@ -213,12 +213,19 @@ def place_of_study(year='2006/2007', state='Berlin', gender='Insgesamt'):
 
     table, total = get_data_for_place_of_study_table(df_study_place, state)
 
+    js_resources = INLINE.render_js()
+    css_resources = INLINE.render_css()
+    script, div = create_hbar(dataset=df_study_place, state=state)
+
     return render_template('place-of-study.html',
                            year='Wintersemester' + ' ' + year,
                            selected_state=state,
                            states=STATES,
                            years=YEARS_STUDY_PLACE,
-                           page_title='Studienort vs. Land des Erwerbs der HZB', ds="place-of-study", table=table, total = total)
+                           page_title='Studienort vs. Land des Erwerbs der HZB', ds="place-of-study",
+                           table=table, total=total,
+                           js=js_resources, css=css_resources,
+                           script=script, div=div)
 
 
 @app.route('/study-place-mapupdate/', methods=['POST'])
@@ -578,7 +585,6 @@ def get_bokeh_data(year):
 
     resp = {'source': source.to_json(include_defaults=True), 'table': table_data}
     return jsonify(resp)
-    # return jsonify(source.to_json(include_defaults=True))
 
 
 def get_data_for_uni_table(data):
@@ -617,9 +623,76 @@ def get_data_for_studens_states_table(dataset, dataset2, year, column):
 
 def get_data_for_place_of_study_table(dataset, state_hzb):
 
-
     table_data = list(zip(dataset['Bundesland_Studienort'], dataset[state_hzb]))
     total = dataset[state_hzb].sum()
     print(table_data, total)
-
     return table_data, total
+
+
+def create_hbar(dataset, state):
+    states = np.flip(dataset.Bundesland_Studienort.values, axis=0)
+    counts = np.flip(dataset.Insgesamt.values, axis=0)
+
+    source = ColumnDataSource(data=dict(states=states, counts=counts), name='place-of-study')
+
+    TOOLTIPS = [
+        ("Bundesland", "@states"),
+        ("Studierende", "@counts{0}")
+    ]
+    plot = figure(y_range=states, plot_height=500, toolbar_location=None,
+                  tooltips=TOOLTIPS,
+                  x_range=(1386, 515000),
+                  sizing_mode="scale_width"
+                  )
+
+    colors = []
+    for s in states:
+        if s == state:
+            colors.append('#4292c6')
+        else:
+            colors.append('#084594')
+
+    plot.hbar(y='states', height=0.9, right='counts',
+              line_color='white', source=source, fill_color=factor_cmap('states', palette=colors, factors=states))
+    plot.xgrid.grid_line_color = None
+    plot.xaxis[0].formatter = NumeralTickFormatter(format="0,0")
+    plot.xaxis.axis_label = "Anzahl"
+    plot.axis.axis_label_text_font_style = 'normal'
+    plot.axis.axis_label_text_color = 'grey'
+    plot.axis.major_label_text_font_size = '14px'
+    plot.axis.major_label_text_color = 'grey'
+    plot.outline_line_color = None
+
+    script, div = components(plot)
+    return script, div
+
+
+@app.route('/bokeh_data_place_of_study/', methods=['GET'])
+def get_bokeh_data_place_of_study():
+    print(request.args)
+
+    if request.args['year']:
+        print("year from request", request.args['year'])
+        year = request.args['year']
+
+    if request.args['state']:
+        print("state from request", request.args['state'])
+        state_hzb = request.args['state']
+
+    if request.args['gender']:
+        print("gender from request", request.args['gender'])
+        gender = request.args['gender']
+
+    dataset = study_place.loc[(study_place.WS == year) & (study_place.Geschlecht == gender)]
+
+    states = np.flip(dataset.Bundesland_Studienort.values, axis=0)
+    counts = np.flip(dataset[state_hzb].values, axis=0)
+    # xmin = counts.min()
+
+    source = ColumnDataSource(data=dict(states=states, counts=counts))
+
+    table_data, total = get_data_for_place_of_study_table(dataset, state_hzb)
+
+    print(table_data, total)
+    resp = {'source': source.to_json(include_defaults=True), 'table': table_data, 'total': str(total)}
+    return jsonify(resp)

@@ -17,7 +17,7 @@
     
     <meta name="viewport" content="width=device-width,
         initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <style>#map_abb6dc36da5e4d7fbd385df1469602aa {
+    <style>#map_e84541e059cf4496b7afb9dcb1b65838 {
         position: relative;
         width: 100.0%;
         height: 100.0%;
@@ -27,18 +27,18 @@
     </style>
     <script src="https://d3js.org/d3.v4.min.js"></script>
 </head>
-<body>    
-    
-    <div class="folium-map" id="map_abb6dc36da5e4d7fbd385df1469602aa" ></div>
+<body>
+
+<div class="folium-map" id="map_e84541e059cf4496b7afb9dcb1b65838"></div>
 </body>
 <script>    
     
     
         var bounds = null;
-    
 
-    var map_abb6dc36da5e4d7fbd385df1469602aa = L.map(
-        'map_abb6dc36da5e4d7fbd385df1469602aa', {
+
+        var map_e84541e059cf4496b7afb9dcb1b65838 = L.map(
+            'map_e84541e059cf4496b7afb9dcb1b65838', {
         center: [51, 13],
         zoom: 6,
         maxBounds: bounds,
@@ -49,8 +49,7 @@
         });
 
 
-    
-    var tile_layer_36432444237f49d5a0e07eb7b4003441 = L.tileLayer(
+        var tile_layer_63c3aae576104b829b14c640f517158f = L.tileLayer(
         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         {
         "attribution": null,
@@ -62,7 +61,7 @@
         "opacity": 1,
         "subdomains": "abc",
         "tms": false
-}).addTo(map_abb6dc36da5e4d7fbd385df1469602aa);
+        }).addTo(map_e84541e059cf4496b7afb9dcb1b65838);
     
             document.addEventListener("DOMContentLoaded", function(event) {
  
@@ -2774,7 +2773,7 @@
                 }
        
                 fill_map = function(){
-                    map = map_abb6dc36da5e4d7fbd385df1469602aa;
+                    map = map_e84541e059cf4496b7afb9dcb1b65838;
                     markers = markersDict[current_timestamp];
                     markers.forEach(function(element) {
                         element.addTo(map);
@@ -2789,7 +2788,7 @@
                     }
                 }
                 clear_map = function(){
-                    map = map_abb6dc36da5e4d7fbd385df1469602aa;
+                    map = map_e84541e059cf4496b7afb9dcb1b65838;
                     
                     for (var year in markersDict ){
                         if(year > current_timestamp){

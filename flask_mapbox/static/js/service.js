@@ -129,6 +129,27 @@ $(document).ready(function () {
                             studRel[i].textContent = numeral(table[i][1]/total).format('0.00%');
                         }
 
+                        $.ajax({
+                            type: 'GET',
+                            url: '/bokeh_data_place_of_study/?year=' + encodeURIComponent(data.year) + '&state=' + encodeURIComponent(data.state)
+                            + '&gender=' + encodeURIComponent(data.gender)
+                        })
+                            .done(function (data) {
+
+                                let ds = Bokeh.documents[0].get_model_by_name('place-of-study');
+                                console.log(ds);
+                                ds.data = data.source.data;
+                                console.log(data.source.data);
+                                console.log(data.source.data);
+                                ds.document.layoutables[0].x_range.end = Math.max(...ds.data.counts);
+                                ds.change.emit();
+
+                                /*
+                                ds.document.layoutables[0].x_range.start=0
+                                ds.document.layoutables[0].x_range.end=200000
+                                 */
+                            })
+
                     });
                 break;
             }
