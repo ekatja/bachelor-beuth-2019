@@ -49,7 +49,7 @@
 
 {% block article %}
 <div class="col-5 h-100">
-    <table class="table table-hover " id="table-place-of-study">
+    <table class="table table-hover" id="table-place-of-study">
         <thead>
         <tr>
             <th class="d-inline-block col-6" scope="col">Bundesland</th>
@@ -60,7 +60,7 @@
         <tbody>
         {% for key in table %}
         <tr>
-            <th class="d-inline-block col-6" scope="row">{{ key[0]|e }}</th>
+            <th class="d-inline-block col-6 font-weight-normal" scope="row">{{ key[0]|e }}</th>
             <td class='d-inline-block col-3 text-right students_a'>{{ "{:,}".format(key[1])|e }}</td>
             <td class='d-inline-block col-3 text-right students_r'>{{ "{:.2%}".format(key[1]/total)|e }}</td>
         </tr>

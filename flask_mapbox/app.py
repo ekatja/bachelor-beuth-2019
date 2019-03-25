@@ -8,7 +8,6 @@ from bokeh.models import ColumnDataSource
 from bokeh.models import NumeralTickFormatter
 from bokeh.plotting import figure
 from bokeh.resources import INLINE
-from bokeh.transform import factor_cmap
 from branca.colormap import linear
 from flask import Flask, request, redirect, render_template, jsonify
 
@@ -206,6 +205,7 @@ def university_foundation_year_update():
 @app.route('/place-of-study/')
 def place_of_study(year='2006/2007', state='Berlin', gender='Insgesamt'):
     df_study_place = study_place.loc[(study_place.WS == year) & (study_place.Geschlecht == gender)]
+    df_study_place_allgender = study_place.loc[(study_place.WS == year)]
 
     bins = create_bins(study_place.loc[study_place.Geschlecht == gender][state].min(),
                        study_place.loc[study_place.Geschlecht == gender][state].max(), 7)
@@ -215,7 +215,7 @@ def place_of_study(year='2006/2007', state='Berlin', gender='Insgesamt'):
 
     js_resources = INLINE.render_js()
     css_resources = INLINE.render_css()
-    script, div = create_hbar(dataset=df_study_place, state=state)
+    script, div = create_hbar(dataset=df_study_place_allgender, state=state)
 
     return render_template('place-of-study.html',
                            year='Wintersemester' + ' ' + year,
@@ -630,18 +630,31 @@ def get_data_for_place_of_study_table(dataset, state_hzb):
 
 
 def create_hbar(dataset, state):
-    states = np.flip(dataset.Bundesland_Studienort.values, axis=0)
-    counts = np.flip(dataset.Insgesamt.values, axis=0)
+    df_m = dataset.loc[dataset.Geschlecht == 'männlich']
+    df_w = dataset.loc[dataset.Geschlecht == 'weiblich']
 
-    source = ColumnDataSource(data=dict(states=states, counts=counts), name='place-of-study')
+    states = np.flip(df_m.Bundesland_Studienort.values, axis=0)
+
+    gender = ['männlich', 'weiblich']
+    counts_m = np.flip(df_m[state].values, axis=0)
+    counts_w = np.flip(df_w[state].values, axis=0)
+
+    # counts = np.flip(dataset[state].values, axis=0)
+    # counts = {'states': states,
+    #           'männlich': np.flip(df_m.Insgesamt.values, axis=0),
+    #           'weiblich': np.flip(df_w.Insgesamt.values, axis=0)}
+
+    # source = ColumnDataSource(data=dict(states=states, counts=counts), name='place-of-study')
+    source = ColumnDataSource(data=dict(states=states, counts_m=counts_m, counts_w=counts_w), name='place-of-study')
 
     TOOLTIPS = [
         ("Bundesland", "@states"),
-        ("Studierende", "@counts{0}")
+        ("Studierende, männlich", "@counts_m{0}"),
+        ("Studierende, weiblich", "@counts_w{0}")
     ]
     plot = figure(y_range=states, plot_height=500, toolbar_location=None,
                   tooltips=TOOLTIPS,
-                  x_range=(1386, 515000),
+                  x_range=(0, 62000),
                   sizing_mode="scale_width"
                   )
 
@@ -652,9 +665,16 @@ def create_hbar(dataset, state):
         else:
             colors.append('#084594')
 
-    plot.hbar(y='states', height=0.9, right='counts',
-              line_color='white', source=source, fill_color=factor_cmap('states', palette=colors, factors=states))
-    plot.xgrid.grid_line_color = None
+    # plot.hbar(y='states', height=0.9, right='counts',
+    #           line_color='white', source=source, fill_color=factor_cmap('states', palette=colors, factors=states))
+
+    plot.hbar_stack(gender, y='states', height=0.9,
+                    color=['blue', 'pink'],
+                    source=source,
+                    legend=["%s" % x for x in gender]
+                    )
+
+    plot.ygrid.grid_line_color = None
     plot.xaxis[0].formatter = NumeralTickFormatter(format="0,0")
     plot.xaxis.axis_label = "Anzahl"
     plot.axis.axis_label_text_font_style = 'normal'
@@ -693,6 +713,5 @@ def get_bokeh_data_place_of_study():
 
     table_data, total = get_data_for_place_of_study_table(dataset, state_hzb)
 
-    print(table_data, total)
     resp = {'source': source.to_json(include_defaults=True), 'table': table_data, 'total': str(total)}
     return jsonify(resp)
