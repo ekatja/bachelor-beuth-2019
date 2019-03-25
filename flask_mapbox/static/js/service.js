@@ -140,7 +140,7 @@ $(document).ready(function () {
                                 console.log(ds);
                                 ds.data = data.source.data;
                                 console.log(data.source.data);
-                                console.log(data.source.data);
+                                console.log(ds.data.männlich);
                                 ds.document.layoutables[0].x_range.end = Math.max(...ds.data.counts);
                                 ds.change.emit();
 

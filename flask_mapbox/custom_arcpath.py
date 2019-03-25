@@ -4,11 +4,10 @@
 import json
 
 from branca.element import Figure, JavascriptLink
-
 from folium import Marker
 from folium.vector_layers import path_options
-
 from jinja2 import Template
+
 
 class CustomArcPath(Marker):
     """
@@ -33,11 +32,14 @@ class CustomArcPath(Marker):
     """
     _template = Template(u"""
             {% macro script(this, kwargs) %}
-            
+            var uniIcon = L.divIcon({
+                html: '<i class="fas fa-university"></i>',
+                iconSize: [20,20],
+                className: 'customIcon'});
             try {
                 var from_poly = L.polygon({{this.location[0]}}).addTo({{this._parent.get_name()}});
                 var from = from_poly.getBounds().getCenter();
-                L.marker([from.lng, from.lat]).addTo({{this._parent.get_name()}});
+                L.marker([from.lng, from.lat], {icon: uniIcon}).addTo({{this._parent.get_name()}});
                 }
             catch(err) {
                 console.log('location[0] is not a point', err);
@@ -46,7 +48,7 @@ class CustomArcPath(Marker):
             try {
                 var to_poly = L.polygon({{this.location[1]}}).addTo({{this._parent.get_name()}});
                 var to = to_poly.getBounds().getCenter();
-                L.marker([to.lng, to.lat]).addTo({{this._parent.get_name()}});
+                L.marker([to.lng, to.lat], {icon: uniIcon}).addTo({{this._parent.get_name()}});
                 }
             catch(err) {
                 console.log('location[1] is not a point', err);

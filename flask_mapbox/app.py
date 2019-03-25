@@ -3,6 +3,7 @@ import json
 import folium
 import numpy as np
 import pandas as pd
+from bokeh.core.properties import value
 from bokeh.embed import components
 from bokeh.models import ColumnDataSource
 from bokeh.models import NumeralTickFormatter
@@ -634,23 +635,24 @@ def create_hbar(dataset, state):
     df_w = dataset.loc[dataset.Geschlecht == 'weiblich']
 
     states = np.flip(df_m.Bundesland_Studienort.values, axis=0)
+    gender = ["männlich", 'weiblich']
 
-    gender = ['männlich', 'weiblich']
     counts_m = np.flip(df_m[state].values, axis=0)
     counts_w = np.flip(df_w[state].values, axis=0)
 
     # counts = np.flip(dataset[state].values, axis=0)
-    # counts = {'states': states,
-    #           'männlich': np.flip(df_m.Insgesamt.values, axis=0),
-    #           'weiblich': np.flip(df_w.Insgesamt.values, axis=0)}
+    counts = {'states': states,
+              'männlich': counts_m,
+              'weiblich': counts_w}
 
     # source = ColumnDataSource(data=dict(states=states, counts=counts), name='place-of-study')
-    source = ColumnDataSource(data=dict(states=states, counts_m=counts_m, counts_w=counts_w), name='place-of-study')
+    # source = ColumnDataSource(data=dict(states=states, counts_m=counts_m, counts_w=counts_w), name='place-of-study')
+    source = ColumnDataSource(counts, name='place-of-study')
 
     TOOLTIPS = [
         ("Bundesland", "@states"),
-        ("Studierende, männlich", "@counts_m{0}"),
-        ("Studierende, weiblich", "@counts_w{0}")
+        ("Studierende, männlich", "@männlich{0}"),
+        ("Studierende, weiblich", "@weiblich{0}")
     ]
     plot = figure(y_range=states, plot_height=500, toolbar_location=None,
                   tooltips=TOOLTIPS,
@@ -671,7 +673,7 @@ def create_hbar(dataset, state):
     plot.hbar_stack(gender, y='states', height=0.9,
                     color=['blue', 'pink'],
                     source=source,
-                    legend=["%s" % x for x in gender]
+                    legend=[value(x) for x in gender]
                     )
 
     plot.ygrid.grid_line_color = None
@@ -703,15 +705,36 @@ def get_bokeh_data_place_of_study():
         print("gender from request", request.args['gender'])
         gender = request.args['gender']
 
-    dataset = study_place.loc[(study_place.WS == year) & (study_place.Geschlecht == gender)]
+    dataset = study_place.loc[(study_place.WS == year)]
+    # if gender == 'Insgesamt':
 
-    states = np.flip(dataset.Bundesland_Studienort.values, axis=0)
-    counts = np.flip(dataset[state_hzb].values, axis=0)
-    # xmin = counts.min()
+    df_m = dataset.loc[dataset.Geschlecht == 'männlich']
+    df_w = dataset.loc[dataset.Geschlecht == 'weiblich']
+    df = dataset.loc[dataset.Geschlecht == gender]
 
-    source = ColumnDataSource(data=dict(states=states, counts=counts))
+    states = np.flip(df_m.Bundesland_Studienort.values, axis=0)
+    # gender = ["männlich", 'weiblich']
 
-    table_data, total = get_data_for_place_of_study_table(dataset, state_hzb)
+    counts_m = np.flip(df_m[state_hzb].values, axis=0)
+    counts_w = np.flip(df_w[state_hzb].values, axis=0)
+
+    # counts = np.flip(dataset[state].values, axis=0)
+    counts = {'states': states,
+              'männlich': counts_m,
+              'weiblich': counts_w,
+              'counts': counts_m + counts_w}
+    source = ColumnDataSource(counts)
+    # else:
+    #     print('select gender', gender)
+    #     df = dataset.loc[dataset.Geschlecht == gender]
+    #
+    #     states = np.flip(df.Bundesland_Studienort.values, axis=0)
+    #     counts = np.flip(df[state_hzb].values, axis=0)
+    #     # xmin = counts.min()
+    #
+    #     source = ColumnDataSource(data=dict(states=states, counts=counts))
+
+    table_data, total = get_data_for_place_of_study_table(df, state_hzb)
 
     resp = {'source': source.to_json(include_defaults=True), 'table': table_data, 'total': str(total)}
     return jsonify(resp)
