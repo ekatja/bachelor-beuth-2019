@@ -7,19 +7,27 @@
 {% endblock %}
 
 {% block map %}
-<div style ='position: absolute;
-                top: 5px;
-                right: 10px;
-                width: 450px;
-                height: 48px;
-                background-color: white;
-                opacity: 0.8;
-                z-index: 500;
-                font-size: 12px;
-                padding: 10px 5px 5px 10px;
-                -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);
-                -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);
-                box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);'></div>
+<div id="custom-legend">
+    <div id="bin-box">
+        <div id="bin0">
+            <p>0</p>
+        </div>
+        <div id="bin1">
+            <p>700</p>
+        </div>
+        <div id="bin2">
+            <p>1300</p>
+        </div>
+        <div id="bin3">
+            <p>1600</p>
+        </div>
+        <div id="bin4">
+            <p>2000</p>
+            <p>60000</p>
+        </div>
+    </div>
+
+</div>
 {% include 'map-place-of-study.html' %}
 {% endblock %}
 

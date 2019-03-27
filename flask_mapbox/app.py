@@ -21,6 +21,8 @@ app.config.from_object(__name__)
 
 # read configuration file from the environment variable and get the access key
 app.config.from_envvar('APP_CONFIG_FILE', silent=True)
+
+
 # MAPBOX_ACCESS_KEY = app.config['MAPBOX_ACCESS_KEY']
 
 @app.after_request
@@ -34,6 +36,7 @@ def add_header(r):
     r.headers["Expires"] = "0"
     r.headers['Cache-Control'] = 'public, max-age=0'
     return r
+
 
 # Import geojson
 with open('dataset/geo_germany.geojson') as data_file:
@@ -65,6 +68,7 @@ MAX_STUDENTS_AMOUNT_ALL_ALL = df['Insgesamt, Insgesamt'].max()
 STATES = np.unique(study_place.Bundesland_Studienort.values)
 YEARS_STUDY_PLACE = np.unique(study_place.WS.values)
 YEARS = np.unique(df.Semester.values)
+
 
 # route to the new template and send value from url
 @app.route('/map/')
@@ -142,7 +146,7 @@ def students_state_mapupdate(dataframe='st_bd',
                                 gethtml=True)
 
         table = get_data_for_studens_states_table(dataset=df_population,
-                                              dataset2=df_year, year=year[:4], column=column)
+                                                  dataset2=df_year, year=year[:4], column=column)
 
         return jsonify({'map': map, 'year': year, 'nationality': nationality, 'gender': gender, 'table': table})
         # return jsonify({'map': map, 'year': year, 'nationality': nationality, 'gender': gender, 'geojson': gj})
@@ -208,8 +212,9 @@ def place_of_study(year='2006/2007', state='Berlin', gender='Insgesamt'):
     df_study_place = study_place.loc[(study_place.WS == year) & (study_place.Geschlecht == gender)]
     df_study_place_allgender = study_place.loc[(study_place.WS == year)]
 
-    bins = create_bins(study_place.loc[study_place.Geschlecht == gender][state].min(),
-                       study_place.loc[study_place.Geschlecht == gender][state].max(), 7)
+    bins = create_bins(df_study_place[state], 5)
+    print(bins)
+
     create_connected_map(data=df_study_place, column=state, legend='Studienort', bins=bins, gethtml=False)
 
     table, total = get_data_for_place_of_study_table(df_study_place, state)
@@ -255,8 +260,7 @@ def study_place_mapupdate(dataframe='place-of-study', year="2017/2018", gender='
         column = state
         study_place_year = study_place.loc[(study_place.WS == year) & (study_place.Geschlecht == gender)]
 
-        bins = create_bins(study_place.loc[study_place.Geschlecht == gender][state].min(),
-                           study_place.loc[study_place.Geschlecht == gender][state].max(), 7)
+        bins = create_bins(study_place.loc[study_place.Geschlecht == gender][state], 5)
 
         map = create_connected_map(data=study_place_year, column=column,
                                    legend='Studienort', bins=bins,
@@ -264,7 +268,9 @@ def study_place_mapupdate(dataframe='place-of-study', year="2017/2018", gender='
 
         table, total = get_data_for_place_of_study_table(study_place_year, state)
 
-        return jsonify({'map': map, 'year': year, 'gender': gender, 'state': state, 'table': table, 'total': int(total)})
+        return jsonify(
+            {'map': map, 'year': year, 'gender': gender, 'state': state, 'table': table, 'total': int(total),
+             'bins': [str(i) for i in bins]})
     else:
         return redirect('/place-of-study')
 
@@ -297,7 +303,7 @@ def create_connected_map(data, column, legend, bins, gethtml):
             CustomArcPath(state_geo['features'][init_index]['geometry']['coordinates'],
                           feature['geometry']['coordinates'],
                           weight=1,
-                          color='red',
+                          color='gray',
                           # pulse_color='green',
                           # delay=400,
                           # dash_array=[10, 20]
@@ -325,7 +331,7 @@ def create_connected_map(data, column, legend, bins, gethtml):
 
 
 # Create choropleth
-def create_choropleth(geo_data, data, columns, legend, bins, gethtml, geojson = False):
+def create_choropleth(geo_data, data, columns, legend, bins, gethtml, geojson=False):
     m = folium.Map(location=[52, 13], tiles="Openstreetmap", zoom_start=6)
 
     folium.Choropleth(
@@ -342,22 +348,20 @@ def create_choropleth(geo_data, data, columns, legend, bins, gethtml, geojson = 
         highlight=True
     ).add_to(m)
 
+
     # Add tooltips to each state
     temp = tooltip_gdf[tooltip_gdf.Semester == data.Semester.values[0]]
     layer = folium.GeoJson(temp,
-                   style_function=lambda x: {'fillColor': '#00000000', 'color': '#00000000'},
-                   highlight_function=lambda x: {'weight': 3, 'color': 'black'},
-                   tooltip=folium.features.GeoJsonTooltip(fields=columns,
-                                                          aliases=['Bundesland', 'Studierende'],
-                                                          labels=True,
-                                                          sticky=True))
+                           style_function=lambda x: {'fillColor': '#00000000', 'color': '#00000000'},
+                           highlight_function=lambda x: {'weight': 3, 'color': 'black'},
+                           tooltip=folium.features.GeoJsonTooltip(fields=columns,
+                                                                  aliases=['Bundesland', 'Studierende'],
+                                                                  labels=True,
+                                                                  sticky=True))
     layer.add_to(m)
 
     if geojson:
-        # return temp.to_json()
         return layer.to_json()
-
-    # folium.LayerControl().add_to(m)
 
     if gethtml:
         print("no html update")
@@ -367,15 +371,12 @@ def create_choropleth(geo_data, data, columns, legend, bins, gethtml, geojson = 
         m.save(outfile='templates/map.html')
 
 
-# Create bins for choropleth and round to thousands
-def create_bins(start, end, number):
-    # TODO add intelligent round option
-    bins = []
-    step = (end - start) / number
-    bins.append(start)
-    for n in range(1, number):
-        bins.append(round(start + step * n, -3))
-    bins.append(end + 1)
+# Create bins for choropleth map and round to thousands
+def create_bins(column, number):
+    bins = [round(x[-1], -3) if x[-1] // 10000 > 0 else round(x[-1], -2) for x in
+            np.array_split(column.sort_values().values, number)]
+    bins.insert(0, 0)
+
     return bins
 
 
@@ -602,18 +603,18 @@ def get_data_for_uni_table(data):
 
     return dict
 
+
 # dataset = population
 # dataset2 = students
 def get_data_for_studens_states_table(dataset, dataset2, year, column):
-
     dataset.Jahr = dataset.Jahr.astype(str)
 
-    table = dataset[dataset.Jahr == year].iloc[:,1:]
+    table = dataset[dataset.Jahr == year].iloc[:, 1:]
     table = table.reset_index(drop=True)
 
     data = dict(
         states=[state for state in table.columns],
-        population=[int(value*1000) for value in table.loc[0]],
+        population=[int(value * 1000) for value in table.loc[0]],
         students_abs=[value for value in dataset2[column]],
     )
     table_data = list(zip(data['states'], data['population'], data['students_abs']))
@@ -623,7 +624,6 @@ def get_data_for_studens_states_table(dataset, dataset2, year, column):
 
 
 def get_data_for_place_of_study_table(dataset, state_hzb):
-
     table_data = list(zip(dataset['Bundesland_Studienort'], dataset[state_hzb]))
     total = dataset[state_hzb].sum()
     print(table_data, total)
@@ -651,9 +651,10 @@ def create_hbar(dataset, state):
 
     TOOLTIPS = [
         ("Bundesland", "@states"),
-        ("Studierende, männlich", "@männlich{0}"),
-        ("Studierende, weiblich", "@weiblich{0}")
+        ("Studierende, männlich", "@{männlich}{0,0}"),
+        ("Studierende, weiblich", "@weiblich{0,0}")
     ]
+
     plot = figure(y_range=states, plot_height=500, toolbar_location=None,
                   tooltips=TOOLTIPS,
                   x_range=(0, 62000),
@@ -675,14 +676,15 @@ def create_hbar(dataset, state):
                     source=source,
                     legend=[value(x) for x in gender]
                     )
-
+    # plot.background_fill_color = "#edeae5"
+    # plot.border_fill_color = "#edeae5"
     plot.ygrid.grid_line_color = None
     plot.xaxis[0].formatter = NumeralTickFormatter(format="0,0")
     plot.xaxis.axis_label = "Anzahl"
-    plot.axis.axis_label_text_font_style = 'normal'
-    plot.axis.axis_label_text_color = 'grey'
+    # plot.axis.axis_label_text_font_style = 'normal'
+    # plot.axis.axis_label_text_color = '#024b52'
     plot.axis.major_label_text_font_size = '14px'
-    plot.axis.major_label_text_color = 'grey'
+    # plot.axis.major_label_text_color = '#024b52'
     plot.outline_line_color = None
 
     script, div = components(plot)

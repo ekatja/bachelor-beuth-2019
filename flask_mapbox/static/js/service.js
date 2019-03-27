@@ -2,11 +2,14 @@ $(document).ready(function () {
 
     console.log("Ready to work!");
 
+    if (document.getElementById("legend")) {
+
+        document.getElementById("legend").remove();
+
+    }
+
     $('#data-selector-form').on('change', function (e) {
 
-        // console.log("Changed data selector");
-        // console.log(window.location.pathname);
-        // console.log($('#data-selector').val());
         switch ($('#data-selector').val()) {
 
             case 'st_bd': {
@@ -39,7 +42,6 @@ $(document).ready(function () {
                 $.ajax({
                     data: {
                         dataframe: $('#data-selector').val(),
-                        // year: $('#slider-value').val(),
                         year: $('#year-selector').val(),
                         nationality: $('input[name=nationality]:checked').val(),
                         gender: $("input[name=gender]:checked").val()
@@ -62,7 +64,7 @@ $(document).ready(function () {
                         // L.geoJSON(gj).addTo(map);
                         //map.addLayer(gj);
                         $('#folium-map').empty();
-                        $('#folium-map').append('<div id = \'legend-bg\'></div>');
+                        $('#folium-map').append('<div id = \'custom-legend\'></div>');
                         $('#folium-map').append($new_map);
 
                         let table = data.table;
@@ -75,9 +77,7 @@ $(document).ready(function () {
                             studAbs[i].textContent = numeral(table[i][2]).format('0,0');
                             studRel[i].textContent = numeral(table[i][2]/table[i][1]).format('0.00%');
                         }
-
                     });
-                // console.log($('#slider-value').val());
                 break;
             }
             case '/university-foundation-year/': {
@@ -102,7 +102,6 @@ $(document).ready(function () {
                     data: {
                         dataframe: $('#data-selector').val(),
                         year: $('#year-selector').val(),
-                        // nationality: $('input[name=nationality]:checked').val(),
                         gender: $("input[name=gender]:checked").val(),
                         state: $('#state-selector').val()
                     },
@@ -111,18 +110,39 @@ $(document).ready(function () {
                 })
                     .done(function (data) {
                         $('#ws').text("Wintersemester "+data.year+', '+data.state+', '+data.gender);
+
                         let $map = $('#folium-map').contents().clone();
                         let $new_map = $(data.map);
                         //TODO: Optimize map include
                         $('#folium-map').empty();
-                        $('#folium-map').append('<div id = \'legend-bg\'></div>');
+                        $('#folium-map').append('<div id = \'custom-legend\'></div>');
                         $('#folium-map').append($new_map);
+
+                        $('#legend').remove();
 
                         $('#state-hzb').text(data.state);
                         let table = data.table;
                         let total = data.total;
+                        let bins = data.bins;
+                        console.log(bins);
                         let studAbs = $('.students_a');
                         let studRel = $('.students_r');
+
+                        var binBox = document.createElement('div');
+                        binBox.id = 'bin-box';
+                        $('#custom-legend').append(binBox);
+                        for (i = 0; i < 5; i++) {
+                            var bin = document.createElement('div');
+                            var label = document.createElement('p');
+                            label.innerText = bins[i];
+                            bin.id = 'bin' + i;
+                            bin.appendChild(label);
+                            binBox.appendChild(bin);
+                        }
+
+                        var label = document.createElement('p');
+                        label.innerText = bins[5];
+                        document.getElementById('bin4').appendChild(label);
 
                         for (var i = 0; i < 16; i++){
                             studAbs[i].textContent = numeral(table[i][1]).format('0,0');

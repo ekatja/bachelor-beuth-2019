@@ -5,8 +5,9 @@ html, body {
     padding: 0;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 12px;
+    /*background-color: #edeae5;*/
+    /*color: #024b52;*/
     }
-
 #main-container {
     padding: 0;
     font-size: 14px;
@@ -14,7 +15,7 @@ html, body {
 #header-row{
     margin-left: 0;
     margin-right: 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid #e8e4dd;
 }
 #custom-header {
     margin: 15px 0 0 15px;
@@ -37,29 +38,32 @@ html, body {
     margin: 0;
     height: calc(100% - 60px);
 }
+
+#options-bar {
+    border-left: 5px solid #e8e4dd;
+}
 #options-bar > h2 {
     font-size: 24px;
 }
 #slider-range {
     margin-top: -10px;
-
 }
-#legend-bg {
+
+#custom-legend {
     position: absolute;
     top: 5px;
     right: 10px;
     width: 450px;
     height: 48px;
-    background-color: white;
-    opacity: 0.8;
-    /*border: 1px solid grey;*/
+    background-color: #ffffffbf;
     z-index: 500;
     font-size: 12px;
-    padding: 10px 5px 5px 10px;
+    padding: 23px 10px;
     -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);
     -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);
     box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.5);
 }
+
 #graph {
     /*position: absolute;*/
     /*top: 60px;*/
@@ -85,10 +89,10 @@ html, body {
 .btn-showinfo {
     text-align: center;
     width: 100%;
-    margin: 5px;
+    margin: 5px 60px;
     display: block;
     height: 50px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid #e8e4dd;
 }
 .angle {
     font-size: 18px;
@@ -114,5 +118,49 @@ html, body {
 }
 #table-students-states * {
     padding: 4px;
+}
+
+#bin-box {
+    width: 400px;
+    display: flex;
+    border: 1px solid #8080807d;
+    margin: auto;
+}
+
+#bin-box p {
+    margin-top: -15px;
+    margin-left: -5px;
+}
+
+#bin0 {
+    height: 10px;
+    width: 80px;
+    background-color: #fef0d9;
+}
+
+#bin1 {
+    height: 10px;
+    width: 80px;
+    background-color: #fdcc8a;
+}
+
+#bin2 {
+    height: 10px;
+    width: 80px;
+    background-color: #fc8d59;
+}
+
+#bin3 {
+    height: 10px;
+    width: 80px;
+    background-color: #e34a33;
+}
+
+#bin4 {
+    height: 10px;
+    width: 80px;
+    background-color: #b30000;
+    display: flex;
+    justify-content: space-between;
 }
 
