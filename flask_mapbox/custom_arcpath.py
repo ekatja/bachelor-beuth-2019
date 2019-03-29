@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 import json
 
 from branca.element import Figure, JavascriptLink
@@ -11,7 +10,7 @@ from jinja2 import Template
 
 class CustomArcPath(Marker):
     """
-    Class for drawing AntPath polyline overlays on a map.
+    Class for drawing custom AntPath polyline overlays on a map.
 
     See :func:`folium.vector_layers.path_options` for the `Path` options.
 
@@ -32,10 +31,12 @@ class CustomArcPath(Marker):
     """
     _template = Template(u"""
             {% macro script(this, kwargs) %}
+            // Create custom icon for marker
             var uniIcon = L.divIcon({
                 html: '<i class="fas fa-university"></i>',
                 iconSize: [20,20],
                 className: 'customIcon'});
+            // Get start and and points for connection lines
             try {
                 var from_poly = L.polygon({{this.location[0]}}).addTo({{this._parent.get_name()}});
                 var from = from_poly.getBounds().getCenter();
@@ -57,16 +58,14 @@ class CustomArcPath(Marker):
             from_poly.remove();
             to_poly.remove();
                 
-                {{this.get_name()}} = L.polyline(L.Polyline.Arc(
-                  [from.lng, from.lat],
-                  [to.lng, to.lat],
-                  
-                )._latlngs, {{ this.options }})
+            // Draw line between points and animate it
+            {{this.get_name()}} = L.polyline(L.Polyline.Arc(
+                [from.lng, from.lat],
+                [to.lng, to.lat])
+                ._latlngs, {{ this.options }})
                 .addTo({{this._parent.get_name()}}).snakeIn();
             {% endmacro %}
             """)  # noqa
-
-
 
     def __init__(self, locations_from, locations_to, popup=None, tooltip=None, **kwargs):
 
@@ -79,8 +78,7 @@ class CustomArcPath(Marker):
         )
 
         self._name = 'CustomArcPath'
-        # Polyline + AntPath defaults.
-        # print(path_options())
+        # Polyline + AntPath defaults
         options = path_options(line=True, **kwargs)
         options.update({
             'vertices': kwargs.pop('vertices', 100),
@@ -98,7 +96,6 @@ class CustomArcPath(Marker):
                                             'if it is not in a Figure.')
 
         figure.header.add_child(
-            # JavascriptLink('https://unpkg.com/leaflet-arc/bin/leaflet-arc.min.js'),  # noqa
             JavascriptLink('/static/js/leaflet-arc.min.js'),
             name='arcpath',
         )

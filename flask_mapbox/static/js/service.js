@@ -1,29 +1,23 @@
 $(document).ready(function () {
 
-    console.log("Ready to work!");
-
+    // Remove default legend for replace with custom legend
     if (document.getElementById("legend")) {
-
         document.getElementById("legend").remove();
-
     }
 
+    // Check which dataset is selected to navigate to corresponding page
     $('#data-selector-form').on('change', function (e) {
 
         switch ($('#data-selector').val()) {
-
             case 'st_bd': {
-                console.log('case: st_bd');
                 window.location = "/map/";
                 break;
             }
             case 'university-foundation-year': {
-                console.log('case: university-foundation-year');
                 window.location = "/university-foundation-year/";
                 break;
             }
             case 'place-of-study': {
-                console.log('case: place-of-study');
                 window.location = "/place-of-study/";
                 break;
             }
@@ -31,14 +25,11 @@ $(document).ready(function () {
         e.preventDefault();
     });
 
+    // Depending of current url get selected data and send it to backend
     $('#options-selector-form').on('change', function (e) {
-        console.log("options change", e);
-        console.log('Changed option selector');
-        console.log(window.location.pathname);
 
         switch(window.location.pathname){
             case '/map/': {
-                console.log('case: options by map');
                 $.ajax({
                     data: {
                         dataframe: $('#data-selector').val(),
@@ -49,24 +40,21 @@ $(document).ready(function () {
                     type: 'POST',
                     url: '/mapupdate/'
                 })
-                    .done(function (data, statusText, xhr) {
-                        console.log(data.table[0]);
+                    .done(function (data) {
+                        // Set page title
                         $('#ws').text("Wintersemester "+data.year+', '+data.nationality+', '+data.gender);
+
+                        // Update map
                         let $map = $('#folium-map').contents().clone();
                         let $new_map = $(data.map);
                         // //TODO: Optimize map include
-                        // let map_name = $("div[id*='map_']").get(0).id;
-                        // let map = window[map_name];
-                        //
-                        // let gj = JSON.parse(data.geojson);
-                        // console.log(gj);
 
-                        // L.geoJSON(gj).addTo(map);
-                        //map.addLayer(gj);
                         $('#folium-map').empty();
                         $('#folium-map').append('<div id = \'custom-legend\'></div>');
                         $('#folium-map').append($new_map);
+                        $('#legend').remove();
 
+                        // Update table data
                         let table = data.table;
                         let pop = $('.population');
                         let studAbs = $('.students_a');
@@ -77,19 +65,19 @@ $(document).ready(function () {
                             studAbs[i].textContent = numeral(table[i][2]).format('0,0');
                             studRel[i].textContent = numeral(table[i][2]/table[i][1]).format('0.00%');
                         }
+                        // Update legend
+                        let bins = data.bins;
+                        createLegend(bins);
                     });
                 break;
             }
             case '/university-foundation-year/': {
-                console.log('case: options by university-foundation-year');
                 $.ajax({
                     data: {
                         dataframe: $('#data-selector').val(),
-
                     },
                     type: 'POST',
                     url: '/mapupdate/'
-                    // url: '/update-university-foundation-year/'
                 })
                     .done(function (data) {
                         // //TODO: Optimize map include
@@ -97,7 +85,6 @@ $(document).ready(function () {
                 break;
             }
             case '/place-of-study/':{
-                console.log('case: options by place-of-study');
                 $.ajax({
                     data: {
                         dataframe: $('#data-selector').val(),
@@ -109,46 +96,34 @@ $(document).ready(function () {
                     url: '/study-place-mapupdate/'
                 })
                     .done(function (data) {
+                        // Update page title
                         $('#ws').text("Wintersemester "+data.year+', '+data.state+', '+data.gender);
 
+                        // Update map
                         let $map = $('#folium-map').contents().clone();
                         let $new_map = $(data.map);
                         //TODO: Optimize map include
                         $('#folium-map').empty();
                         $('#folium-map').append('<div id = \'custom-legend\'></div>');
                         $('#folium-map').append($new_map);
-
                         $('#legend').remove();
 
                         $('#state-hzb').text(data.state);
                         let table = data.table;
                         let total = data.total;
-                        let bins = data.bins;
-                        console.log(bins);
                         let studAbs = $('.students_a');
                         let studRel = $('.students_r');
-
-                        var binBox = document.createElement('div');
-                        binBox.id = 'bin-box';
-                        $('#custom-legend').append(binBox);
-                        for (i = 0; i < 5; i++) {
-                            var bin = document.createElement('div');
-                            var label = document.createElement('p');
-                            label.innerText = bins[i];
-                            bin.id = 'bin' + i;
-                            bin.appendChild(label);
-                            binBox.appendChild(bin);
-                        }
-
-                        var label = document.createElement('p');
-                        label.innerText = bins[5];
-                        document.getElementById('bin4').appendChild(label);
 
                         for (var i = 0; i < 16; i++){
                             studAbs[i].textContent = numeral(table[i][1]).format('0,0');
                             studRel[i].textContent = numeral(table[i][1]/total).format('0.00%');
                         }
 
+                        // Update map legend
+                        let bins = data.bins;
+                        createLegend(bins);
+
+                        // Send selected options to backend for chart update
                         $.ajax({
                             type: 'GET',
                             url: '/bokeh_data_place_of_study/?year=' + encodeURIComponent(data.year) + '&state=' + encodeURIComponent(data.state)
@@ -157,19 +132,10 @@ $(document).ready(function () {
                             .done(function (data) {
 
                                 let ds = Bokeh.documents[0].get_model_by_name('place-of-study');
-                                console.log(ds);
                                 ds.data = data.source.data;
-                                console.log(data.source.data);
-                                console.log(ds.data.männlich);
                                 ds.document.layoutables[0].x_range.end = Math.max(...ds.data.counts);
                                 ds.change.emit();
-
-                                /*
-                                ds.document.layoutables[0].x_range.start=0
-                                ds.document.layoutables[0].x_range.end=200000
-                                 */
-                            })
-
+                            });
                     });
                 break;
             }
@@ -177,7 +143,7 @@ $(document).ready(function () {
         }
     });
 
-
+    // On the page with university-by-year visualization get selected year and send it to backend for line chart and table update
     $('#year-slider-uni').on('input', function (e) {
 
         $.ajax({
@@ -185,7 +151,6 @@ $(document).ready(function () {
             url: '/bokeh_data/'+$('#year-slider-uni').find('output#slider-value').val()
         })
             .done(function (data) {
-
                 let ds = Bokeh.documents[0].get_model_by_name('students');
                 ds.data = data.source.data;
                 ds.change.emit();
@@ -194,12 +159,12 @@ $(document).ready(function () {
                 let tableData = data.table;
                 let uniAll = 0, hsAll = 0, kmhAll = 0, otherAll = 0, resultAll = 0;
 
+                // Update table data
                 let uni = tableData[currentYear].uni;
                 let hs = tableData[currentYear].hs;
                 let kmh = tableData[currentYear].kmh;
                 let other = tableData[currentYear].other;
                 let result = uni+hs+kmh+other;
-                //console.log(currentYear);
 
                 $('#uni-year').text(currentYear);
                 $('#uni').text(uni);
@@ -211,7 +176,6 @@ $(document).ready(function () {
                 for (let year in tableData){
 
                     if ( year <= currentYear){
-                        // console.log("year:" + year, "currentYear: "+currentYear);
                         uniAll += tableData[year].uni;
                         hsAll += tableData[year].hs;
                         kmhAll += tableData[year].kmh;
@@ -226,7 +190,7 @@ $(document).ready(function () {
                 $('#result-all').text(resultAll);
 
             });
-
+// ????
         $.ajax({
             data: {
                 dataframe: $('#data-selector').val(),
@@ -242,13 +206,32 @@ $(document).ready(function () {
         e.preventDefault();
     });
 
+    // Open/Close below panel with extra information
     $('.btn-showinfo').click(function () {
         $('.statistic-content').toggleClass('open-info');
         $(this).find('i').toggleClass('fa-angle-up fa-angle-down');
     });
 
-
 });
 
+/**
+ * Create custom legend and add to the map
+ * @param binsArr - array with bins ranges
+ */
+function createLegend(binsArr) {
+    var binBox = document.createElement('div');
+    binBox.id = 'bin-box';
+    $('#custom-legend').append(binBox);
 
-
+    for (i = 0; i < binsArr.length - 1; i++) {
+        var bin = document.createElement('div');
+        var label = document.createElement('p');
+        label.innerText = binsArr[i];
+        bin.id = 'bin' + i;
+        bin.appendChild(label);
+        binBox.appendChild(bin);
+    }
+    var label = document.createElement('p');
+    label.innerText = binsArr[binsArr.length - 1];
+    document.getElementById('bin' + String(binsArr.length - 2)).appendChild(label);
+}

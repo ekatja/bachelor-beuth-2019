@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# from __future__ import (absolute_import, division, print_function)
-
 import json
 
 from branca.element import Figure, JavascriptLink
-
 from folium.features import GeoJson
-
 from jinja2 import Template
 
 
@@ -33,11 +29,6 @@ class TimeSliderMarker(GeoJson):
 
     #TODO: Move template to file
 
-    # from jinja2 import Template
-    # with open('template.html.jinja2') as file_:
-    #     template = Template(file_.read())
-    # template.render(name='John')
-
     _template = Template(u"""
             {% macro script(this, kwargs) %}
             document.addEventListener("DOMContentLoaded", function(event) {
@@ -59,6 +50,7 @@ class TimeSliderMarker(GeoJson):
                     .attr("id", "slider")
                     .attr("step", "1")
                     .style('align', 'center');
+                    
                 // insert time slider output BEFORE time slider (text on top of slider)
                 d3.select("#year-slider-uni").insert("p", ":first-child").append("output")
                     .attr("width", "100")
@@ -69,7 +61,7 @@ class TimeSliderMarker(GeoJson):
                 var datestring = current_timestamp.toString();
                 d3.select("output#slider-value").text(datestring);
                 
-                //Create markers 
+                // Create markers 
                 create_marker = function(){
                     for (var year in styledict){
                         var markersArr = [];
@@ -85,7 +77,7 @@ class TimeSliderMarker(GeoJson):
                         markersDict[year] = markersArr;
                     }
                 }
-       
+                // Add markers to the map
                 fill_map = function(){
                     map = {{this._parent.get_name()}};
                     markers = markersDict[current_timestamp];
@@ -101,6 +93,7 @@ class TimeSliderMarker(GeoJson):
                         }
                     }
                 }
+                // Remove markers from the map
                 clear_map = function(){
                     map = {{this._parent.get_name()}};
                     
@@ -116,11 +109,9 @@ class TimeSliderMarker(GeoJson):
                 
                 d3.select("#slider").on("input", function() {
                     current_timestamp = timestamps[this.value];
-                
                     var datestring = current_timestamp.toString();
                     d3.select("output#slider-value").text(datestring);
                     fill_map();
-                    //clear_map();
                 });
                 
                 create_marker();
@@ -137,7 +128,7 @@ class TimeSliderMarker(GeoJson):
         if not isinstance(styledict, dict):
             raise ValueError('styledict must be a dictionary, got {!r}'.format(styledict))  # noqa
 
-        # Make set of timestamps.
+        # Make set of timestamps
         timestamps = set()
         for key in styledict.keys():
             timestamps.add(key)

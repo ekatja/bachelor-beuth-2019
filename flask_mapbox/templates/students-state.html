@@ -3,7 +3,29 @@
 
 {% block map %}
 
-<div id='custom-legend'></div>
+<div id='custom-legend'>
+    <div id="bin-box">
+        <div id="bin0">
+            <p>0</p>
+        </div>
+        <div id="bin1">
+            <p>39000</p>
+        </div>
+        <div id="bin2">
+            <p>55000</p>
+        </div>
+        <div id="bin3">
+            <p>113000</p>
+        </div>
+        <div id="bin4">
+            <p>200000</p>
+        </div>
+        <div id="bin5">
+            <p>752000</p>
+            <p>777000</p>
+        </div>
+    </div>
+</div>
     <!--{% include 'timeslider.html' %}-->
     {% include 'map.html' %}
 {% endblock %}
@@ -25,11 +47,6 @@
 {% endblock %}
 
 {% block year_slider %}
-<!--<div class="mb-0" id="year-slider-students"></div>-->
-<!--<div class="d-flex justify-content-between" id="slider-range">-->
-    <!--<span>1998/99</span>-->
-    <!--<span>2016/17</span>-->
-<!--</div>-->
 {% endblock %}
 
 {% block state %}
@@ -41,7 +58,7 @@
 
 {% block article %}
 
-<table class="table table-hover w-50" id="table-students-states" >
+<table class="table table-hover col-7" id="table-students-states">
   <thead>
     <tr>
         <th class="d-inline-block col-4" scope="col">Bundesland</th>
@@ -53,7 +70,7 @@
   <tbody>
      {% for key in table %}
     <tr>
-        <th class="d-inline-block col-4" scope="row">{{ key[0]|e }}</th>
+        <th class="d-inline-block col-4 font-weight-normal" scope="row">{{ key[0]|e }}</th>
         <td class='d-inline-block col-2 text-right population'>{{ "{:,}".format(key[1])|e }}</td>
         <td class='d-inline-block col-3 text-right students_a'>{{ "{:,}".format(key[2])|e }}</td>
         <td class='d-inline-block col-3 text-right students_r'>{{ "{:.2%}".format(key[2]/key[1])|e }}</td>

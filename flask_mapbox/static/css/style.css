@@ -120,8 +120,12 @@ html, body {
     padding: 4px;
 }
 
+#table-place-of-study * {
+    padding: 4px;
+}
+
 #bin-box {
-    width: 400px;
+    width: 420px;
     display: flex;
     border: 1px solid #8080807d;
     margin: auto;
@@ -141,22 +145,46 @@ html, body {
 #bin1 {
     height: 10px;
     width: 80px;
-    background-color: #fdcc8a;
+    background-color: #fdd49e;
+}
+
+#bin1 p {
+    margin-left: -10px;
 }
 
 #bin2 {
     height: 10px;
     width: 80px;
-    background-color: #fc8d59;
+    background-color: #fdbb84;
+}
+
+#bin2 p {
+    margin-left: -10px;
 }
 
 #bin3 {
     height: 10px;
     width: 80px;
-    background-color: #e34a33;
+    background-color: #fc8d59;
+}
+
+#bin3 p {
+    margin-left: -15px;
 }
 
 #bin4 {
+    height: 10px;
+    width: 80px;
+    background-color: #e34a33;
+    display: flex;
+    justify-content: space-between;
+}
+
+#bin4 p {
+    margin-left: -20px;
+}
+
+#bin5 {
     height: 10px;
     width: 80px;
     background-color: #b30000;
@@ -164,3 +192,6 @@ html, body {
     justify-content: space-between;
 }
 
+#bin5 p {
+    margin-left: -20px;
+}
