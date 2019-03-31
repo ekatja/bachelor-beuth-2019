@@ -42,18 +42,11 @@ $(document).ready(function () {
                 })
                     .done(function (data) {
                         // Set page title
-                        $('#ws').text("Wintersemester "+data.year+', '+data.nationality+', '+data.gender);
+                        $('#ws').text("Wintersemester " + data.year + ', ' + data.nationality + ', ' + data.gender);
 
                         // Update map
-                        let map = $('#folium-map').contents().clone();
                         let new_map = $(data.map);
-
-                        //$('#folium-map').contents().splice(39, 3, new_map.slice(35, 38));
-
                         $('#folium-map').empty().append(new_map).append('<div id = \'custom-legend\'></div>');
-                        // setTimeout(5000);
-                        // $('#folium-map').append('<div id = \'custom-legend\'></div>');
-                        // $('#folium-map').append(new_map);
                         $('#legend').remove();
 
                         // Update legend
@@ -66,25 +59,12 @@ $(document).ready(function () {
                         let studAbs = $('.students_a');
                         let studRel = $('.students_r');
 
-                        for (var i = 0; i < 16; i++){
+                        for (var i = 0; i < 16; i++) {
                             pop[i].textContent = numeral(table[i][1]).format('0,0');
                             studAbs[i].textContent = numeral(table[i][2]).format('0,0');
-                            studRel[i].textContent = numeral(table[i][2]/table[i][1]).format('0.00%');
+                            studRel[i].textContent = numeral(table[i][2] / table[i][1]).format('0.00%');
                         }
                     });
-                break;
-            }
-            case '/university-foundation-year/': {
-                // $.ajax({
-                //     data: {
-                //         dataframe: $('#data-selector').val(),
-                //     },
-                //     type: 'POST',
-                //     url: '/mapupdate/'
-                // })
-                //     .done(function (data) {
-                //
-                //     });
                 break;
             }
             case '/place-of-study/':{

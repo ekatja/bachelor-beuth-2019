@@ -2,9 +2,7 @@
 import json
 
 from branca.element import Figure, JavascriptLink
-
 from folium.features import GeoJson
-
 from jinja2 import Template
 
 
@@ -130,10 +128,10 @@ class CustomTimeSliderChoropleth(GeoJson):
                                                    overlay=overlay,
                                                    control=control, show=show)
         if not isinstance(styledict, dict):
-            raise ValueError('styledict must be a dictionary, got {!r}'.format(styledict))  # noqa
+            raise ValueError('styledict must be a dictionary, got {!r}'.format(styledict))
         for val in styledict.values():
             if not isinstance(val, dict):
-                raise ValueError('Each item in styledict must be a dictionary, got {!r}'.format(val))  # noqa
+                raise ValueError('Each item in styledict must be a dictionary, got {!r}'.format(val))
 
         # Make set of timestamps.
         timestamps = set()

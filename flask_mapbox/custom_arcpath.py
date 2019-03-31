@@ -10,7 +10,7 @@ from jinja2 import Template
 
 class CustomArcPath(Marker):
     """
-    Class for drawing custom AntPath polyline overlays on a map.
+    Class for drawing custom ArcPath polyline overlays on a map.
 
     See :func:`folium.vector_layers.path_options` for the `Path` options.
 
@@ -78,7 +78,7 @@ class CustomArcPath(Marker):
         )
 
         self._name = 'CustomArcPath'
-        # Polyline + AntPath defaults
+
         options = path_options(line=True, **kwargs)
         options.update({
             'vertices': kwargs.pop('vertices', 100),
@@ -100,6 +100,6 @@ class CustomArcPath(Marker):
             name='arcpath',
         )
         figure.header.add_child(
-            JavascriptLink('/static/js/L.Polyline.SnakeAnim.js'),  # noqa
+            JavascriptLink('/static/js/L.Polyline.SnakeAnim.js'),
             name='antpath',
         )

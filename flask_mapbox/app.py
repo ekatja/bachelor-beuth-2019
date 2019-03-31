@@ -10,7 +10,7 @@ from bokeh.models import ColumnDataSource
 from bokeh.models import NumeralTickFormatter
 from bokeh.plotting import figure
 from bokeh.resources import INLINE
-from flask import Flask, request, redirect, render_template, jsonify
+from flask import Flask, request, redirect, render_template, jsonify, abort
 
 # Import local classes
 from . import CustomArcPath
@@ -20,29 +20,29 @@ from . import TimeSliderMarker
 app = Flask(__name__)
 app.config.from_object(__name__)
 
-# TODO add datasets
+
 # DATASETS IMPORTS
 #
-# df
-# df_population
+# df - dataset "Studierendenzahl nach Bundesland, Nationalität und Geschlecht WS 1998/99 - WS 2016/17" (DS1)
+# tooltip_gdf - dataset for tooltips for dataset DS1
+# df_population - dataset Germany population (DSB)
+# df2 - dataset "Hochschulen nach Gründungsjahr von 1386 bis 2017" (DS2)
+# study_place - dataset "Studierende nach Geschlecht, Land des Studienortes und Land des Erwerbs
+#                        der Hochschulzugangsberechtigung WS 2006/07 - WS 2017/18" (DS3)
+# tooltip_place_of_study_gdf - dataset for tooltips for dataset DS3
 #
 with open('dataset/geo_germany.geojson') as data_file:
     state_geo = json.load(data_file)
 
 df = pd.read_pickle("dataset/students_bundesland_gender_foreigner_ws1998_99_ws2016_17.pkl")
-df_population = pd.read_pickle("dataset/bevoelkerung_1998_2016.pkl")
-df_un_bl_year = pd.read_pickle("dataset/university_bundesland_year.pkl")
-unis = pd.read_pickle('dataset/geocoordinate_university.pkl')
-hs_list = pd.read_pickle('dataset/hs_liste.pkl')
-study_place = pd.read_pickle('dataset/students_gender_study_place_vs_study_permission_ws2006_07_ws2017_18.pkl')
-
 tooltip_gdf = pd.read_pickle("dataset/tooltip_geojson_fiona.pkl")
+df_population = pd.read_pickle("dataset/bevoelkerung_1998_2016.pkl")
+df2 = pd.read_pickle('dataset/hochschule_koordinaten.pkl')
+study_place = pd.read_pickle('dataset/students_gender_study_place_vs_study_permission_ws2006_07_ws2017_18.pkl')
 tooltip_place_of_study_gdf = pd.read_pickle('dataset/tooltip_place_of_study_geojson_fiona.pkl')
 
 
 # Constants
-MIN_STUDENTS_AMOUNT_ALL_ALL = df['Insgesamt, Insgesamt'].min()
-MAX_STUDENTS_AMOUNT_ALL_ALL = df['Insgesamt, Insgesamt'].max()
 STATES = np.unique(study_place.Bundesland_Studienort.values)
 YEARS_STUDY_PLACE = np.unique(study_place.WS.values)
 YEARS = np.unique(df.Semester.values)
@@ -104,6 +104,10 @@ def students_state_mapupdate(dataframe='st_bd',
             gender = request.form['gender']
 
         df_year = df[df.Semester == year]
+
+        if df_year.empty:
+            return abort(409, 'No data available for this year.')
+
         column = nationality + ', ' + gender
 
         bins = create_bins(df[column], 6)
@@ -128,7 +132,8 @@ def timemap(year=1386):
     '''
     Route to the URL /university-foundation-year/ and render a page with university-by-year visualization
     '''
-    style_dict = create_unis_dict(unis)
+    # style_dict = create_unis_dict(unis)
+    style_dict = create_unis_dict(df2)
     create_timemap(state_geo, style_dict, False)
 
     # JS and CSS for Bokeh widget
@@ -140,24 +145,6 @@ def timemap(year=1386):
                            ds="university-foundation-year",
                            js=js_resources, css=css_resources,
                            script=script, div=div, dict=style_dict)
-
-
-@app.route('/update-university-foundation-year/', methods=['POST'])
-def university_foundation_year_update():
-    '''
-    Endpoint for Ajax university-by-year visualization update
-    :return JSON Object with data
-    '''
-
-    if request.form['dataframe']:
-        print("dataframe from form", request.form['dataframe'])
-        dataframe = request.form['dataframe']
-
-    if request.form['year']:
-        print("year from form", request.form['year'])
-        year = request.form['year']
-
-    return jsonify(year=year)
 
 
 @app.route('/place-of-study/')
@@ -208,12 +195,14 @@ def study_place_mapupdate(dataframe='place-of-study', year="2017/2018", gender='
     if request.form['state']:
         state = request.form['state']
 
-    # TODO try catch
     if dataframe == 'place-of-study':
         column = state
         study_place_year = study_place.loc[(study_place.WS == year) & (study_place.Geschlecht == gender)]
 
         bins = create_bins(study_place.loc[study_place.Geschlecht == gender][state], 6)
+
+        if study_place_year.empty or len(bins) == 0:
+            return abort(409, 'No data available.')
 
         map = create_connected_map(data=study_place_year, column=column,
                                    legend='Studienort', bins=bins,
@@ -225,8 +214,7 @@ def study_place_mapupdate(dataframe='place-of-study', year="2017/2018", gender='
             {'map': map, 'year': year, 'gender': gender, 'state': state, 'table': table, 'total': int(total),
              'bins': [str(i) for i in bins]})
     else:
-        # TODO check url
-        print('redirecting to place-of-study')
+        print('[WARN] :: Unexpected dataset selected. Redirecting to place-of-study')
         return redirect('/place-of-study')
 
 
@@ -395,7 +383,7 @@ def create_graph(unis_dict, year=None):
     ]
     source = ColumnDataSource(data=dict(year=x, quantity=y), name='students')
 
-    plot = figure(plot_height=400, plot_width=600,
+    plot = figure(plot_height=400, sizing_mode="scale_width",
                   toolbar_location='below',
                   tools='hover, xwheel_zoom, xpan',
                   tooltips=TOOLTIPS,
@@ -423,7 +411,8 @@ def get_bokeh_data(year):
     :return JSON Object with data
     '''
 
-    style_dict = create_unis_dict(unis)
+    # style_dict = create_unis_dict(unis)
+    style_dict = create_unis_dict(df2)
     data = {}
 
     for i, (k, v) in enumerate(style_dict.items()):
@@ -435,7 +424,7 @@ def get_bokeh_data(year):
 
     source = ColumnDataSource(data=dict(year=x, quantity=y))
 
-    table_data = get_data_for_uni_table(hs_list)
+    table_data = get_data_for_uni_table(df2)
 
     resp = {'source': source.to_json(include_defaults=True), 'table': table_data}
     return jsonify(resp)

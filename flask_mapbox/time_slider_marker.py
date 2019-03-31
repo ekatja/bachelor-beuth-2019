@@ -89,8 +89,6 @@ class TimeSliderMarker(GeoJson):
                             }); 
                         }
                     }
-                    
-                    
                     for (year in markersDict) {
                         if (year <= current_timestamp) {
                             markers = markersDict[year];
@@ -102,21 +100,6 @@ class TimeSliderMarker(GeoJson):
                             break;
                         }
                     };
-                    
-                    
-                    
-                    //markers = markersDict[current_timestamp];
-                    //markers.forEach(function(element) {
-                    //     element.addTo(map);
-                    // });  
-                    //for (var year in markersDict ){
-                    //    if(year > current_timestamp){
-                    //        markers = markersDict[year];
-                    //        markers.forEach(function(element) {
-                    //            element.removeFrom(map);
-                    //        }); 
-                    //    }
-                    //}
                 }
                 // Remove markers from the map
                 clear_map = function(){
@@ -134,7 +117,6 @@ class TimeSliderMarker(GeoJson):
                 
                 d3.select("#slider").on("input", function() {
                     current_timestamp = timestamps[this.value];
-                    console.log("Current timestamp is "+current_timestamp);
                     var datestring = current_timestamp.toString();
                     d3.select("output#slider-value").text(datestring);
                     fill_map();

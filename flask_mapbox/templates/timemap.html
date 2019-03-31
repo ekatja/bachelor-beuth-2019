@@ -17,7 +17,7 @@
     
     <meta name="viewport" content="width=device-width,
         initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <style>#map_32128e2fec474831ba5f95b3a9919c5d {
+    <style>#map_491bee7f1f8045cf839d794b3a48062e {
         position: relative;
         width: 100.0%;
         height: 100.0%;
@@ -29,7 +29,7 @@
 </head>
 <body>
 
-<div class="folium-map" id="map_32128e2fec474831ba5f95b3a9919c5d"></div>
+<div class="folium-map" id="map_491bee7f1f8045cf839d794b3a48062e"></div>
 </body>
 <script>    
     
@@ -37,8 +37,8 @@
         var bounds = null;
 
 
-        var map_32128e2fec474831ba5f95b3a9919c5d = L.map(
-            'map_32128e2fec474831ba5f95b3a9919c5d', {
+        var map_491bee7f1f8045cf839d794b3a48062e = L.map(
+            'map_491bee7f1f8045cf839d794b3a48062e', {
         center: [51, 13],
         zoom: 6,
         maxBounds: bounds,
@@ -49,7 +49,7 @@
         });
 
 
-        var tile_layer_fee2cb1e419a432a81d868e93535e458 = L.tileLayer(
+        var tile_layer_e24a87c4bd3a4dde8aa384351708162e = L.tileLayer(
         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         {
         "attribution": null,
@@ -61,7 +61,7 @@
         "opacity": 1,
         "subdomains": "abc",
         "tms": false
-        }).addTo(map_32128e2fec474831ba5f95b3a9919c5d);
+        }).addTo(map_491bee7f1f8045cf839d794b3a48062e);
     
             document.addEventListener("DOMContentLoaded", function(event) {
  
@@ -693,8 +693,8 @@
       "typ": "Kunst- und Musikhochschulen"
     },
     {
-      "lat": 50.71581,
-      "lon": 12.49468,
+        "lat": 50.71576,
+        "lon": 12.49495,
       "name": "Wests\u00e4chsische Hochschule Zwickau",
       "typ": "Fachhochschulen / HAW"
     }
@@ -851,8 +851,8 @@
   ],
   "1925": [
     {
-      "lat": 51.0289091,
-      "lon": 13.7704731,
+        "lat": 51.02898,
+        "lon": 13.7709,
       "name": "Palucca Hochschule f\u00fcr Tanz Dresden",
       "typ": "Kunst- und Musikhochschulen"
     },
@@ -2579,8 +2579,8 @@
       "typ": "Fachhochschulen / HAW"
     },
     {
-      "lat": 49.46979,
-      "lon": 8.48551,
+        "lat": 49.46981,
+        "lon": 8.48552,
       "name": "Hochschule der Wirtschaft f\u00fcr Management",
       "typ": "Fachhochschulen / HAW"
     }
@@ -2775,24 +2775,19 @@
                 }
                 // Add markers to the map
                 fill_map = function(){
-                    map = map_32128e2fec474831ba5f95b3a9919c5d;
+                    map = map_491bee7f1f8045cf839d794b3a48062e;
                     for (var year in markersDict) {
                         if (year > current_timestamp) {
                             markers = markersDict[year];
                             markers.forEach(function (element) {
                                 element.removeFrom(map);
-                            });
+                            }); 
                         }
                     }
-
-
                     for (year in markersDict) {
                         if (year <= current_timestamp) {
-                            console.log("Adding markers " + year);
                             markers = markersDict[year];
-                            console.log(markers.length);
                             markers.forEach(function (element) {
-                                //console.log("Adding marker "+element);
                                 element.addTo(map);
                             });
                         }
@@ -2801,25 +2796,10 @@
                         }
                     }
                     ;
-                    
-                    
-                    
-                    markers = markersDict[current_timestamp];
-                    markers.forEach(function(element) {
-                        element.addTo(map);
-                    });
-                    for (var year in markersDict ){
-                        if(year > current_timestamp){
-                            markers = markersDict[year];
-                            markers.forEach(function(element) {
-                                element.removeFrom(map);
-                            }); 
-                        }
-                    }
                 }
                 // Remove markers from the map
                 clear_map = function(){
-                    map = map_32128e2fec474831ba5f95b3a9919c5d;
+                    map = map_491bee7f1f8045cf839d794b3a48062e;
                     
                     for (var year in markersDict ){
                         if(year > current_timestamp){
@@ -2833,7 +2813,6 @@
                 
                 d3.select("#slider").on("input", function() {
                     current_timestamp = timestamps[this.value];
-                    console.log("Current timestamp is " + current_timestamp);
                     var datestring = current_timestamp.toString();
                     d3.select("output#slider-value").text(datestring);
                     fill_map();
