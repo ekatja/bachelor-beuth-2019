@@ -5,7 +5,7 @@ $(document).ready(function () {
         document.getElementById("legend").remove();
     }
 
-    // Check which dataset is selected to navigate to corresponding page
+    // Navigate to corresponding page according to selected dataset
     $('#data-selector-form').on('change', function (e) {
 
         switch ($('#data-selector').val()) {
@@ -25,7 +25,7 @@ $(document).ready(function () {
         e.preventDefault();
     });
 
-    // Depending of current url get selected data and send it to backend
+    // Request data according to current page and selected options
     $('#options-selector-form').on('change', function (e) {
 
         switch(window.location.pathname){
@@ -45,14 +45,20 @@ $(document).ready(function () {
                         $('#ws').text("Wintersemester "+data.year+', '+data.nationality+', '+data.gender);
 
                         // Update map
-                        let $map = $('#folium-map').contents().clone();
-                        let $new_map = $(data.map);
-                        // //TODO: Optimize map include
+                        let map = $('#folium-map').contents().clone();
+                        let new_map = $(data.map);
 
-                        $('#folium-map').empty();
-                        $('#folium-map').append('<div id = \'custom-legend\'></div>');
-                        $('#folium-map').append($new_map);
+                        //$('#folium-map').contents().splice(39, 3, new_map.slice(35, 38));
+
+                        $('#folium-map').empty().append(new_map).append('<div id = \'custom-legend\'></div>');
+                        // setTimeout(5000);
+                        // $('#folium-map').append('<div id = \'custom-legend\'></div>');
+                        // $('#folium-map').append(new_map);
                         $('#legend').remove();
+
+                        // Update legend
+                        let bins = data.bins;
+                        createLegend(bins);
 
                         // Update table data
                         let table = data.table;
@@ -65,23 +71,20 @@ $(document).ready(function () {
                             studAbs[i].textContent = numeral(table[i][2]).format('0,0');
                             studRel[i].textContent = numeral(table[i][2]/table[i][1]).format('0.00%');
                         }
-                        // Update legend
-                        let bins = data.bins;
-                        createLegend(bins);
                     });
                 break;
             }
             case '/university-foundation-year/': {
-                $.ajax({
-                    data: {
-                        dataframe: $('#data-selector').val(),
-                    },
-                    type: 'POST',
-                    url: '/mapupdate/'
-                })
-                    .done(function (data) {
-                        // //TODO: Optimize map include
-                    });
+                // $.ajax({
+                //     data: {
+                //         dataframe: $('#data-selector').val(),
+                //     },
+                //     type: 'POST',
+                //     url: '/mapupdate/'
+                // })
+                //     .done(function (data) {
+                //
+                //     });
                 break;
             }
             case '/place-of-study/':{
@@ -100,13 +103,17 @@ $(document).ready(function () {
                         $('#ws').text("Wintersemester "+data.year+', '+data.state+', '+data.gender);
 
                         // Update map
-                        let $map = $('#folium-map').contents().clone();
-                        let $new_map = $(data.map);
+                        let map = $('#folium-map').contents().clone();
+                        let new_map = $(data.map);
                         //TODO: Optimize map include
                         $('#folium-map').empty();
                         $('#folium-map').append('<div id = \'custom-legend\'></div>');
-                        $('#folium-map').append($new_map);
+                        $('#folium-map').append(new_map);
                         $('#legend').remove();
+
+                        // Update map legend
+                        let bins = data.bins;
+                        createLegend(bins);
 
                         $('#state-hzb').text(data.state);
                         let table = data.table;
@@ -118,10 +125,6 @@ $(document).ready(function () {
                             studAbs[i].textContent = numeral(table[i][1]).format('0,0');
                             studRel[i].textContent = numeral(table[i][1]/total).format('0.00%');
                         }
-
-                        // Update map legend
-                        let bins = data.bins;
-                        createLegend(bins);
 
                         // Send selected options to backend for chart update
                         $.ajax({
@@ -143,8 +146,8 @@ $(document).ready(function () {
         }
     });
 
-    // On the page with university-by-year visualization get selected year and send it to backend for line chart and table update
-    $('#year-slider-uni').on('input', function (e) {
+    // Request line chart and table update for the selected year for university-by-year visualization
+    $('#year-slider-uni').on('change', function (e) {
 
         $.ajax({
             type: 'GET',
@@ -190,23 +193,11 @@ $(document).ready(function () {
                 $('#result-all').text(resultAll);
 
             });
-// ????
-        $.ajax({
-            data: {
-                dataframe: $('#data-selector').val(),
-                year: $('#year-slider-uni').find('output#slider-value').val(),
-            },
-            type: 'POST',
-            url: '/update-university-foundation-year/'
-        })
-            .done(function (data) {
-                // console.log(data.year);
-                // $('#uni-year').text(data.year);
-            });
+
         e.preventDefault();
     });
 
-    // Open/Close below panel with extra information
+    // Toggle extra information overlay panel
     $('.btn-showinfo').click(function () {
         $('.statistic-content').toggleClass('open-info');
         $(this).find('i').toggleClass('fa-angle-up fa-angle-down');
@@ -215,7 +206,7 @@ $(document).ready(function () {
 });
 
 /**
- * Create custom legend and add to the map
+ * Create custom map legend
  * @param binsArr - array with bins ranges
  */
 function createLegend(binsArr) {

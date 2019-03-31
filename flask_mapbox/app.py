@@ -10,7 +10,6 @@ from bokeh.models import ColumnDataSource
 from bokeh.models import NumeralTickFormatter
 from bokeh.plotting import figure
 from bokeh.resources import INLINE
-from branca.colormap import linear
 from flask import Flask, request, redirect, render_template, jsonify
 
 # Import local classes
@@ -20,22 +19,6 @@ from . import TimeSliderMarker
 # Init flask application
 app = Flask(__name__)
 app.config.from_object(__name__)
-
-# TODO clean comments
-# read configuration file from the environment variable and get the access key
-# app.config.from_envvar('APP_CONFIG_FILE', silent=True)
-
-# @app.after_request
-# def add_header(r):
-#     """
-#     Add headers to both force latest IE rendering engine or Chrome Frame,
-#     and also to cache the rendered page for 10 minutes.
-#     """
-#     r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-#     r.headers["Pragma"] = "no-cache"
-#     r.headers["Expires"] = "0"
-#     r.headers['Cache-Control'] = 'public, max-age=0'
-#     return r
 
 # TODO add datasets
 # DATASETS IMPORTS
@@ -56,11 +39,6 @@ study_place = pd.read_pickle('dataset/students_gender_study_place_vs_study_permi
 tooltip_gdf = pd.read_pickle("dataset/tooltip_geojson_fiona.pkl")
 tooltip_place_of_study_gdf = pd.read_pickle('dataset/tooltip_place_of_study_geojson_fiona.pkl')
 
-# Convert dataframe to geodataframe
-# tooltip_gdf = gpd.GeoDataFrame(tooltip)
-# tooltip_gdf.crs = fiona.crs.from_epsg(4326)
-# tooltip_place_of_study_gdf = gpd.GeoDataFrame(tooltip_place_of_study)
-# tooltip_place_of_study_gdf.crs = fiona.crs.from_epsg(4326)
 
 # Constants
 MIN_STUDENTS_AMOUNT_ALL_ALL = df['Insgesamt, Insgesamt'].min()
@@ -105,9 +83,6 @@ def students_state_mapupdate(dataframe='st_bd',
     Endpoint for Ajax students-by-state visualization update
     :return JSON Object with data or redirect to university-by-year visualization
     '''
-    # TODO: a = [v for v in request.form]
-
-    print("Got request", request.form)
 
     # Get data according to selected dataset
     if request.form['dataframe']:
@@ -173,7 +148,6 @@ def university_foundation_year_update():
     Endpoint for Ajax university-by-year visualization update
     :return JSON Object with data
     '''
-    print("Got request", request.form)
 
     if request.form['dataframe']:
         print("dataframe from form", request.form['dataframe'])
@@ -221,26 +195,20 @@ def study_place_mapupdate(dataframe='place-of-study', year="2017/2018", gender='
     Endpoint for Ajax place-of-study visualization update
     :return JSON Object with data or redirect to university-by-year visualization
     '''
-    # TODO: a = [v for v in request.form]
-
-    print("Got request", request.form)
 
     if request.form['dataframe']:
-        print("dataframe from form", request.form['dataframe'])
         dataframe = request.form['dataframe']
 
     if request.form['year']:
-        print("year from form", request.form['year'])
         year = request.form['year']
 
     if request.form['gender']:
-        print('gender from form', request.form['gender'])
         gender = request.form['gender']
 
     if request.form['state']:
-        print('state from form', request.form['state'])
         state = request.form['state']
 
+    # TODO try catch
     if dataframe == 'place-of-study':
         column = state
         study_place_year = study_place.loc[(study_place.WS == year) & (study_place.Geschlecht == gender)]
@@ -258,6 +226,7 @@ def study_place_mapupdate(dataframe='place-of-study', year="2017/2018", gender='
              'bins': [str(i) for i in bins]})
     else:
         # TODO check url
+        print('redirecting to place-of-study')
         return redirect('/place-of-study')
 
 
@@ -309,14 +278,13 @@ def create_connected_map(data, column, legend, bins, gethtml):
                                                           aliases=['Bundesland', 'Studierende aus ' + str(column)],
                                                           labels=True,
                                                           sticky=False)).add_to(m)
-    # TODO check this condition
     if gethtml:
         return m.get_root().render()
     else:
         m.save(outfile='templates/map-place-of-study.html')
 
 
-def create_choropleth(geo_data, data, columns, legend, bins, gethtml, geojson=False):
+def create_choropleth(geo_data, data, columns, legend, bins, gethtml):
     '''
     Create a choropleth map with tooltips.
     '''
@@ -346,9 +314,6 @@ def create_choropleth(geo_data, data, columns, legend, bins, gethtml, geojson=Fa
                                                           labels=True,
                                                           sticky=True)).add_to(m)
 
-    # if geojson:
-    #     return layer.to_json()
-
     if gethtml:
         return m.get_root().render()
     else:
@@ -356,15 +321,11 @@ def create_choropleth(geo_data, data, columns, legend, bins, gethtml, geojson=Fa
 
 
 def create_bins(column, number):
-    # TODO check this
     '''
-    Create bins for choropleth map. Round range numbers to thousand
-    :param column: Column from dataset to create bins
-    :type column: Series
-    :param number: number of bins
-    :type number: int
+    Create bins for choropleth map. Round bins range to thousands
+    :param column: Dataset column to create bins
+    :param number: Number of bins
     :return: Array of numbers
-    :rtype: sequence
     '''
     temp = column.sort_values().values
     bins = [round(x[-1], -3) if x[-1] // 10000 > 0 else round(x[-1], -2) for x in
@@ -378,87 +339,10 @@ def create_bins(column, number):
     return bins
 
 
-# Data preparation for TimeSliderChoroplet map
-def create_style_dict(data):
-    # create color schema for universities
-    min_color = data.Anzahl.min()
-    max_color = data.Anzahl.max()
-    cmap = linear.PuRd_09.scale(min_color, max_color)
-
-    # Create dictionary for styles
-    styledata = {}
-    styles = pd.DataFrame()
-
-    for country in state_geo.get('features'):
-        temp = data.loc[data.Bundesland == country.get('properties').get('NAME_1')]
-
-        for i, row in temp.iterrows():
-            new_df = pd.DataFrame(data={'color': [row['Anzahl']], 'opacity': [0.5], 'year': [row['Gründungsjahr']]})
-            styles = styles.append(new_df, ignore_index=True)
-
-        styledata[country.get('id')] = styles
-
-    # Set color for quantity
-    for country, data in styledata.items():
-        data['color'] = data['color'].apply(cmap)
-    # Set year as index
-    for key in styledata:
-        datetime_index = styledata.get(key).year
-        styledata.get(key).set_index(datetime_index, inplace=True)
-
-    # Create dictionary with styles for each states
-    styledict = {
-        str(country): data.to_dict(orient='index') for
-        country, data in styledata.items()
-    }
-    return styledict
-
-
-# Data preparation for TimeSliderChoroplet map
-def create_style_dict_students_bundesland(data, column):
-    # create color schema for universities
-    min_color = data[column].min()
-    max_color = data[column].max()
-    cmap = linear.OrRd_09.scale(min_color, max_color)
-
-    # Create legend for the map
-    legend = cmap.to_step(index=create_bins(min_color, max_color, 7))
-    legend.caption = 'Studentenzahl'
-    # colormap.add_to(world_map)
-
-    # Create dictionary for styles
-    styledata = {}
-
-    for country in state_geo.get('features'):
-        styles = pd.DataFrame()
-        temp = data.loc[data.Bundesland == country.get('properties').get('NAME_1')]
-
-        for i, row in temp.iterrows():
-            new_df = pd.DataFrame(data={'color': [row[column]], 'opacity': [0.5], 'year': [row['Semester']]})
-            styles = styles.append(new_df, ignore_index=True)
-
-        styledata[country.get('id')] = styles
-
-    # Set color for quantity
-    for country, data in styledata.items():
-        data['color'] = data['color'].apply(cmap)
-    # Set year as index
-    for key in styledata:
-        datetime_index = styledata.get(key).year
-        styledata.get(key).set_index(datetime_index, inplace=True)
-
-    # Create dictionary with styles for each bundesland
-    styledict = {
-        str(country): data.to_dict(orient='index') for country, data in styledata.items()
-    }
-    return styledict, legend
-
-
-# Create dictionary of universities for each year
 def create_unis_dict(data):
     '''
     Prepare data for university-by-state visualization
-    :return: Data in dictionary format
+    :return: Dictionary with the list of universities data for each year
     '''
     unis_dict = {}
 
@@ -492,33 +376,9 @@ def create_timemap(geo_data, style_dict, gethtml=False):
         m.save(outfile='templates/timemap.html')
 
 
-# def create_timeslider_choropleth(geo_data, data, columns, style_dict, legend, gethtml=False, geojson=False):
-#     m = folium.Map(location=[51, 13], tiles="Openstreetmap", zoom_start=6)
-#     CustomTimeSliderChoropleth(geo_data, style_dict).add_to(m)
-#
-#     temp = tooltip_gdf[tooltip_gdf.Semester == data.Semester.values[0]]
-#
-#     folium.GeoJson(temp,
-#                    style_function=lambda x: {'fillColor': '#00000000', 'color': '#00000000'},
-#                    highlight_function=lambda x: {'weight': 3, 'color': 'black'},
-#                    tooltip=folium.GeoJsonTooltip(fields=columns,
-#                                                  aliases=['Bundesland', 'Studierende'],
-#                                                  labels=True,
-#                                                  sticky=True)).add_to(m)
-#
-#     legend.add_to(m)
-#
-#     if gethtml:
-#         print("no html update")
-#         return m.get_root().render()
-#     else:
-#         print("timeslider.html")
-#         m.save(outfile='templates/timeslider.html')
-
-
 def create_graph(unis_dict, year=None):
     '''
-    Create line chart for university-by-state visualization
+    Create line chart for university-by-state visualization using bokeh library
     '''
 
     if year is not None:
@@ -526,18 +386,6 @@ def create_graph(unis_dict, year=None):
         y = [0, len(unis_dict.get(year))]
 
     else:
-        # f = {}
-        # for k in unis_dict.keys():
-        #     f[k] = len(unis_dict.get(k))
-        #
-        # s = []
-        # for i, item in enumerate(sorted(f.items())):
-        #     if i == 0:
-        #         s.append(item[1])
-        #     else:
-        #         s.append(s[i - 1] + item[1])
-
-        # Data for plotting
         x = sorted(unis_dict.keys())
         y = accomulate_unis_data(unis_dict)
 
@@ -552,8 +400,7 @@ def create_graph(unis_dict, year=None):
                   tools='hover, xwheel_zoom, xpan',
                   tooltips=TOOLTIPS,
                   x_range=(1386, 2017),
-                  y_range=(0, 400),
-                  # title='Anzahl der Hochschulen'
+                  y_range=(0, 400)
                   )
 
     plot.line(x='year', y='quantity', source=source, line_width=3)
@@ -564,7 +411,7 @@ def create_graph(unis_dict, year=None):
     plot.yaxis.axis_label = "Anzahl"
     plot.axis.axis_label_text_font_style = 'normal'
 
-    # Line chart components for include to page
+    # Line chart bokeh components
     script, div = components(plot)
     return script, div
 
@@ -572,7 +419,7 @@ def create_graph(unis_dict, year=None):
 @app.route('/bokeh_data/<int:year>', methods=['GET'])
 def get_bokeh_data(year):
     '''
-    Endpoint for Ajax chart and table update for university-by-year visualization
+    Endpoint for dynamic bokeh line chart and table updates used for university-by-year visualization
     :return JSON Object with data
     '''
 
@@ -583,21 +430,8 @@ def get_bokeh_data(year):
         if k <= year:
             data[k] = style_dict[k]
 
-    # f = {}
-    # for k in data.keys():
-    #     f[k] = len(data.get(k))
-    #
-    # s = []
-    # for i, item in enumerate(sorted(f.items())):
-    #     if i == 0:
-    #         s.append(item[1])
-    #     else:
-    #         s.append(s[i - 1] + item[1])
-
-    # Data for plotting
     x = sorted(data.keys())
     y = accomulate_unis_data(data)
-    # y = s
 
     source = ColumnDataSource(data=dict(year=x, quantity=y))
 
@@ -628,10 +462,9 @@ def accomulate_unis_data(data):
 
 def get_data_for_uni_table(data):
     '''
-    Prepare data for table for university-by-year visualization
+    Prepare data for table in overlay used by university-by-year visualization
     :return: Data in dictionary format
     '''
-
 
     df = data[['Hochschulname', 'Hochschultyp', 'Gründungsjahr']]
     df = df[:-3]
@@ -647,16 +480,14 @@ def get_data_for_uni_table(data):
     return dict
 
 
-# dataset = population
-# dataset2 = students
 def get_data_for_studens_states_table(dataset, dataset2, year, column):
     '''
-    Prepare data for table for students-by-states visualization
-    :param dataset: dataset with population data
-    :param dataset2: dataset with students data
-    :param year: year
-    :param column: column name from dataset2
-    :return: Data in list format
+    Prepare data for table in overlay used by students-by-states visualization
+    :param dataset: Dataset with population data
+    :param dataset2: Dataset with students data
+    :param year: Year
+    :param column: Column name from dataset2
+    :return: List with population and students numbers by state
     '''
 
     dataset.Jahr = dataset.Jahr.astype(str)
@@ -677,11 +508,12 @@ def get_data_for_studens_states_table(dataset, dataset2, year, column):
 
 def get_data_for_place_of_study_table(dataset, state_hzb):
     '''
-    Prepare data for table for state-of-study visualization
-    :param dataset: dataset with students data
-    :param state_hzb: dataset column name for selected state
-    :return: Data in list format and sum of state_hzb column
+    Prepare data for table in overlay used by state-of-study visualization
+    :param dataset: Dataset with students data
+    :param state_hzb: Column name for selected state
+    :return: List with number of students and total value
     '''
+
     table_data = list(zip(dataset['Bundesland_Studienort'], dataset[state_hzb]))
     total = dataset[state_hzb].sum()
     return table_data, total
@@ -689,29 +521,30 @@ def get_data_for_place_of_study_table(dataset, state_hzb):
 
 def create_hbar(dataset, state):
     '''
-    Create horizontal stacked bar chart for place-of-study visualization
+    Create horizontal stacked bar chart for place-of-study visualization using bokeh library
     '''
-    # create subsets of male and female data
+
+    # Create subsets of male and female data
     df_m = dataset.loc[dataset.Geschlecht == 'männlich']
     df_w = dataset.loc[dataset.Geschlecht == 'weiblich']
 
-    # create list of states
+    # Create list of states
     states = np.flip(df_m.Bundesland_Studienort.values, axis=0)
 
     gender = ["männlich", 'weiblich']
 
-    # numbers of male and female students for each state
+    # Numbers of male and female students for each state
     counts_m = np.flip(df_m[state].values, axis=0)
     counts_w = np.flip(df_w[state].values, axis=0)
 
-    # create a dictionary from states and numbers
+    # Create a dictionary with states and numbers of male and female students
     counts = {'states': states,
               'männlich': counts_m,
               'weiblich': counts_w}
 
     source = ColumnDataSource(counts, name='place-of-study')
 
-    # create tooltips for chart
+    # Create tooltips for stacked bar chart
     TOOLTIPS = [
         ("Bundesland", "@states"),
         ("Studierende, männlich", "@{männlich}{0,0}"),
@@ -728,16 +561,11 @@ def create_hbar(dataset, state):
                     source=source,
                     legend=[value(x) for x in gender])
 
-    # Styling options
-    # plot.background_fill_color = "#edeae5"
-    # plot.border_fill_color = "#edeae5"
+    # Styling options for stacked bar chart
     plot.ygrid.grid_line_color = None
     plot.xaxis[0].formatter = NumeralTickFormatter(format="0,0")
     plot.xaxis.axis_label = "Anzahl"
-    # plot.axis.axis_label_text_font_style = 'normal'
-    # plot.axis.axis_label_text_color = '#024b52'
     plot.axis.major_label_text_font_size = '14px'
-    # plot.axis.major_label_text_color = '#024b52'
     plot.outline_line_color = None
     plot.legend.orientation = "horizontal"
 
@@ -749,24 +577,22 @@ def create_hbar(dataset, state):
 @app.route('/bokeh_data_place_of_study/', methods=['GET'])
 def get_bokeh_data_place_of_study():
     '''
-    Endpoint for Ajax place-of-study chart and table update
-    :return JSON Object with data
+    Endpoint for dynamic bokeh chart and table update used by place-of-study visualization
     '''
 
     if request.args['year']:
-        print("year from request", request.args['year'])
         year = request.args['year']
 
     if request.args['state']:
-        print("state from request", request.args['state'])
         state_hzb = request.args['state']
 
     if request.args['gender']:
-        print("gender from request", request.args['gender'])
         gender = request.args['gender']
 
+    # TODO error handling
     dataset = study_place.loc[(study_place.WS == year)]
 
+    # Data subsets split by gender
     df_m = dataset.loc[dataset.Geschlecht == 'männlich']
     df_w = dataset.loc[dataset.Geschlecht == 'weiblich']
     df = dataset.loc[dataset.Geschlecht == gender]
@@ -775,14 +601,13 @@ def get_bokeh_data_place_of_study():
 
     counts_m = np.flip(df_m[state_hzb].values, axis=0)
     counts_w = np.flip(df_w[state_hzb].values, axis=0)
-
     counts = {'states': states,
               'männlich': counts_m,
               'weiblich': counts_w,
               'counts': counts_m + counts_w}
+
     source = ColumnDataSource(counts)
 
     table_data, total = get_data_for_place_of_study_table(df, state_hzb)
 
-    resp = {'source': source.to_json(include_defaults=True), 'table': table_data, 'total': str(total)}
-    return jsonify(resp)
+    return jsonify({'source': source.to_json(include_defaults=True), 'table': table_data, 'total': str(total)})

@@ -17,7 +17,7 @@
     
     <meta name="viewport" content="width=device-width,
         initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <style>#map_78bcb84a819c4aa0ab645305872e0ff7 {
+    <style>#map_32128e2fec474831ba5f95b3a9919c5d {
         position: relative;
         width: 100.0%;
         height: 100.0%;
@@ -29,7 +29,7 @@
 </head>
 <body>
 
-<div class="folium-map" id="map_78bcb84a819c4aa0ab645305872e0ff7"></div>
+<div class="folium-map" id="map_32128e2fec474831ba5f95b3a9919c5d"></div>
 </body>
 <script>    
     
@@ -37,8 +37,8 @@
         var bounds = null;
 
 
-        var map_78bcb84a819c4aa0ab645305872e0ff7 = L.map(
-            'map_78bcb84a819c4aa0ab645305872e0ff7', {
+        var map_32128e2fec474831ba5f95b3a9919c5d = L.map(
+            'map_32128e2fec474831ba5f95b3a9919c5d', {
         center: [51, 13],
         zoom: 6,
         maxBounds: bounds,
@@ -49,7 +49,7 @@
         });
 
 
-        var tile_layer_8a5e4b5bf30d40eba8ed3ce8e16c1dc8 = L.tileLayer(
+        var tile_layer_fee2cb1e419a432a81d868e93535e458 = L.tileLayer(
         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         {
         "attribution": null,
@@ -61,7 +61,7 @@
         "opacity": 1,
         "subdomains": "abc",
         "tms": false
-        }).addTo(map_78bcb84a819c4aa0ab645305872e0ff7);
+        }).addTo(map_32128e2fec474831ba5f95b3a9919c5d);
     
             document.addEventListener("DOMContentLoaded", function(event) {
  
@@ -2745,6 +2745,7 @@
                     .attr("id", "slider")
                     .attr("step", "1")
                     .style('align', 'center');
+
                 // insert time slider output BEFORE time slider (text on top of slider)
                 d3.select("#year-slider-uni").insert("p", ":first-child").append("output")
                     .attr("width", "100")
@@ -2754,9 +2755,10 @@
                     .style('font-weight', '500%');
                 var datestring = current_timestamp.toString();
                 d3.select("output#slider-value").text(datestring);
-                
-                //Create markers 
+
+                // Create markers 
                 create_marker = function(){
+
                     for (var year in styledict){
                         var markersArr = [];
                         for (var uni in styledict[year]){
@@ -2771,13 +2773,41 @@
                         markersDict[year] = markersArr;
                     }
                 }
-       
+                // Add markers to the map
                 fill_map = function(){
-                    map = map_78bcb84a819c4aa0ab645305872e0ff7;
+                    map = map_32128e2fec474831ba5f95b3a9919c5d;
+                    for (var year in markersDict) {
+                        if (year > current_timestamp) {
+                            markers = markersDict[year];
+                            markers.forEach(function (element) {
+                                element.removeFrom(map);
+                            });
+                        }
+                    }
+
+
+                    for (year in markersDict) {
+                        if (year <= current_timestamp) {
+                            console.log("Adding markers " + year);
+                            markers = markersDict[year];
+                            console.log(markers.length);
+                            markers.forEach(function (element) {
+                                //console.log("Adding marker "+element);
+                                element.addTo(map);
+                            });
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                    ;
+                    
+                    
+                    
                     markers = markersDict[current_timestamp];
                     markers.forEach(function(element) {
                         element.addTo(map);
-                    });  
+                    });
                     for (var year in markersDict ){
                         if(year > current_timestamp){
                             markers = markersDict[year];
@@ -2787,8 +2817,9 @@
                         }
                     }
                 }
+                // Remove markers from the map
                 clear_map = function(){
-                    map = map_78bcb84a819c4aa0ab645305872e0ff7;
+                    map = map_32128e2fec474831ba5f95b3a9919c5d;
                     
                     for (var year in markersDict ){
                         if(year > current_timestamp){
@@ -2802,11 +2833,10 @@
                 
                 d3.select("#slider").on("input", function() {
                     current_timestamp = timestamps[this.value];
-                
+                    console.log("Current timestamp is " + current_timestamp);
                     var datestring = current_timestamp.toString();
                     d3.select("output#slider-value").text(datestring);
                     fill_map();
-                    //clear_map();
                 });
                 
                 create_marker();
