@@ -48,6 +48,7 @@ YEARS_STUDY_PLACE = np.unique(study_place.WS.values)
 YEARS = np.unique(df.Semester.values)
 
 
+@app.route('/')
 @app.route('/map/')
 def map(year='1998/99'):
     '''
