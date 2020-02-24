@@ -3,7 +3,7 @@ asn1crypto==0.24.0
 attrs==18.2.0
 backcall==0.1.0
 beautifulsoup4==4.7.1
-bleach==3.1.0
+bleach==3.1.1
 bokeh==1.0.4
 branca==0.3.1
 certifi==2018.11.29
