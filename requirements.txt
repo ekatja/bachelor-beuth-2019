@@ -35,7 +35,7 @@ MarkupSafe==1.1.0
 matplotlib==3.0.2
 mistune==0.8.4
 munch==2.3.2
-numpy==1.15.4
+numpy==1.22.0
 olefile==0.46
 orderedset==2.0.1
 overpy==0.4
