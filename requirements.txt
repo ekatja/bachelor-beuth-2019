@@ -44,7 +44,7 @@ packaging==19.0
 pandas==0.24.0
 pandocfilters==1.4.2
 pickleshare==0.7.5
-Pillow==5.4.1
+Pillow==9.3.0
 psycopg2==2.7.7
 ptyprocess==0.6.0
 pycosat==0.6.3
